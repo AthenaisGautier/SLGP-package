@@ -14,6 +14,7 @@
 #'
 #' @importFrom mvnfast rmvt
 #'
+#' @export
 #'
 #' @examples
 #' w <- sample_spectral_Matern(dimension = 1, order = 10000)
@@ -24,7 +25,7 @@ sample_spectral_Matern <- function(dimension, order) {
   if (!requireNamespace("mvnfast", quietly = TRUE)) {
     stop("Package 'mvnfast' could not be used")
   }
-  w_i <- rmvt(n = order,
+  w_i <- mvnfast::rmvt(n = order,
               mu = rep(0, dimension),
               sigma = diag(dimension),
               df = 5)
@@ -52,8 +53,6 @@ sample_spectral_Matern <- function(dimension, order) {
 #'#'
 #' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
-#' @examples
-#' initialize_parameters("RFF", dimension = 10, matern_parameter = 0.5)
 #'
 #' @export
 #'
@@ -138,7 +137,7 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=lis
 #' @return List. A list containing the upper triangular factor of the Cholesky decomposition of the kernel matrix as well as its inverse.
 #'
 #' @examples
-#' initialize_basisfun_inducingpt(dimension = 2, lengthscale=c(0.1, 0.1))
+#' initialize_basisfun_inducingpt(dimension = 2, lengthscale=c(0.1, 0.1), numberPoints=5)
 #'
 #' @export
 #'
@@ -192,7 +191,7 @@ initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthsc
 #' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
 #' @examples
-#' initialize_basisfun_RFF(dimension = 2, MatParam = 5/2, lengthscale=c(0.1, 0.1))
+#' initialize_basisfun_RFF(dimension = 2, nFreq=10, MatParam = 5/2, lengthscale=c(0.1, 0.1))
 #'
 #' @export
 #'
@@ -204,7 +203,7 @@ initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscal
   if(is.null(MatParam)){
     MatParam<- 5/2
   }
-  freq <- mvnfast::rmvt(n=nFreq, delta=rep(0, dimension),
+  freq <- mvnfast::rmvt(n=nFreq, mu=rep(0, dimension),
                         sigma=diag(dimension), df=2*MatParam)
   freq <- rbind(freq, freq)
   offset <- c(rep(0, nFreq), rep(-pi/2, nFreq))
@@ -232,11 +231,11 @@ initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscal
 #' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
 #' @examples
-#' initialize_basisfun_fillingRFF(dimension = 2, MatParam = 5/2, lengthscale=c(0.1, 0.1))
+#' initialize_basisfun_fillingRFF(dimension = 2, nFreq=10, MatParam = 5/2, lengthscale=c(0.1, 0.1))
 #'
 #' @export
 #'
-initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale, seed) {
+initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale, seed=0) {
   # Check if basisFunctionsUsed is valid
   print("You selected space-filling Fourier Features, in the current implementation, this is only available for Mat\ffffffc3rn (2k+1)/2 kernels.")
   if (!requireNamespace("DiceDesign", quietly = TRUE)) {

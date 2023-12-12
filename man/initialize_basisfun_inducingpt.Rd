@@ -31,6 +31,6 @@ List. A list containing the upper triangular factor of the Cholesky decompositio
 This function initializes parameters for basis functions based on inducing points.
 }
 \examples{
-initialize_basisfun_inducingpt(dimension = 2, lengthscale=c(0.1, 0.1))
+initialize_basisfun_inducingpt(dimension = 2, lengthscale=c(0.1, 0.1), numberPoints=5)
 
 }

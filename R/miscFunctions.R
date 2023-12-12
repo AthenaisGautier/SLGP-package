@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' data <- matrix(c(0, 0, 0.1, 0.9, 0.5, 0.5, 0.1, 0.1), ncol=2, byrow=TRUE)
-#' rosenblatt_transform(x=data, dimension = 2)
+#' rosenblatt_transform_multivarStudent(x=data, dimension = 2)
 #'
 #' @export
 #'

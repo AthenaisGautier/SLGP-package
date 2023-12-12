@@ -9,7 +9,7 @@ initialize_basisfun_fillingRFF(
   nFreq,
   MatParam = 5/2,
   lengthscale,
-  seed
+  seed = 0
 )
 }
 \arguments{
@@ -29,6 +29,6 @@ List. A list containing the initialized parameters necessary for evaluating the 
 This function initializes parameters for basis functions based on space-filling Random Fourier Features (for Matérn kernels only).
 }
 \examples{
-initialize_basisfun_fillingRFF(dimension = 2, MatParam = 5/2, lengthscale=c(0.1, 0.1))
+initialize_basisfun_fillingRFF(dimension = 2, nFreq=10, MatParam = 5/2, lengthscale=c(0.1, 0.1))
 
 }

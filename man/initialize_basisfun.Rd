@@ -27,7 +27,3 @@ List. A list containing the initialized parameters necessary for evaluating the 
 \description{
 This function initializes parameters based on the specified type of basis function.
 }
-\examples{
-initialize_parameters("RFF", dimension = 10, matern_parameter = 0.5)
-
-}
