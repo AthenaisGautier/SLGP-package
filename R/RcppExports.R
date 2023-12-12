@@ -10,12 +10,3 @@ crossdist <- function(x, y) {
     .Call(`_SLGP_crossdist`, x, y)
 }
 
-#' Computes the negative log likelihood
-#' @param x First matrix
-#' @param y Second matrix
-#' @return something
-#' @export
-negloglike <- function(epsilon, y) {
-    .Call(`_SLGP_negloglike`, epsilon, y)
-}
-

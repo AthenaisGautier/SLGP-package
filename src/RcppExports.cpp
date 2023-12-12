@@ -23,22 +23,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// negloglike
-Rcpp::NumericVector negloglike(Eigen::VectorXd epsilon, Eigen::VectorXd y);
-RcppExport SEXP _SLGP_negloglike(SEXP epsilonSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type epsilon(epsilonSEXP);
-    Rcpp::traits::input_parameter< Eigen::VectorXd >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(negloglike(epsilon, y));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_SLGP_crossdist", (DL_FUNC) &_SLGP_crossdist, 2},
-    {"_SLGP_negloglike", (DL_FUNC) &_SLGP_negloglike, 2},
     {NULL, NULL, 0}
 };
 
