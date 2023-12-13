@@ -23,9 +23,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// negloglike2
+Rcpp::NumericVector negloglike2(Eigen::VectorXd epsilon, Eigen::VectorXd y);
+RcppExport SEXP _SLGP_negloglike2(SEXP epsilonSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type epsilon(epsilonSEXP);
+    Rcpp::traits::input_parameter< Eigen::VectorXd >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(negloglike2(epsilon, y));
+    return rcpp_result_gen;
+END_RCPP
+}
+// computeLikelihoodADsimple
+Rcpp::NumericVector computeLikelihoodADsimple(const Eigen::VectorXd& epsilon, const Eigen::VectorXd& meanFvalues, const int n, const Eigen::MatrixXd& functionValuesInt, const int nIntegral, const Eigen::VectorXd& weightQuadrature, const Eigen::VectorXd& multiplicities);
+RcppExport SEXP _SLGP_computeLikelihoodADsimple(SEXP epsilonSEXP, SEXP meanFvaluesSEXP, SEXP nSEXP, SEXP functionValuesIntSEXP, SEXP nIntegralSEXP, SEXP weightQuadratureSEXP, SEXP multiplicitiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type epsilon(epsilonSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type meanFvalues(meanFvaluesSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type functionValuesInt(functionValuesIntSEXP);
+    Rcpp::traits::input_parameter< const int >::type nIntegral(nIntegralSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type weightQuadrature(weightQuadratureSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type multiplicities(multiplicitiesSEXP);
+    rcpp_result_gen = Rcpp::wrap(computeLikelihoodADsimple(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_SLGP_crossdist", (DL_FUNC) &_SLGP_crossdist, 2},
+    {"_SLGP_negloglike2", (DL_FUNC) &_SLGP_negloglike2, 2},
+    {"_SLGP_computeLikelihoodADsimple", (DL_FUNC) &_SLGP_computeLikelihoodADsimple, 7},
     {NULL, NULL, 0}
 };
 

@@ -60,14 +60,38 @@ computeLikelihood <- function(epsilon,
 #'
 
 computeNegLogLikelihood <- function(epsilon,
-                              functionValues,
-                              intermediateQuantities,
-                              interpolateBasisFun){
+                                    functionValues,
+                                    intermediateQuantities,
+                                    interpolateBasisFun,
+                                    nIntegral){
   if (!requireNamespace("Rcpp", quietly = TRUE)) {
     stop("Package 'Rcpp' could not be used")
   }
   if (!requireNamespace("StanHeaders", quietly = TRUE)) {
     stop("Package 'StanHeaders' could not be used")
+  }
+
+  if(interpolateBasisFun=="WNN"){
+
+  }else{
+    if(interpolateBasisFun=="nothing"){
+      res <- computeLikelihoodADsimple(epsilon=epsilon,
+                                       meanFvalues=colMeans(functionValues[intermediateQuantities$indSamplesToNodes,]),
+                                       n= nrow(intermediateQuantities$indSamplesToNodes),
+                                       functionValuesInt= functionValues[!is.na(intermediateQuantities$indNodesToIntegral),],
+                                       nIntegral=nIntegral,
+                                       weightQuadrature=rep(1/(nIntegral), nIntegral),
+                                       multiplicities=c(as.matrix(table(intermediateQuantities$indSamplesToPredictor))[, 1]))
+    }
+    if(interpolateBasisFun=="NN"){
+      res <- computeLikelihoodADsimple(epsilon=epsilon,
+                                       meanFvalues=colMeans(functionValues[intermediateQuantities$indSamplesToNodes,]),
+                                       n= nrow(intermediateQuantities$indSamplesToNodes),
+                                       functionValuesInt= functionValues[!is.na(intermediateQuantities$indNodesToIntegral),],
+                                       nIntegral=nIntegral,
+                                       weightQuadrature=rep(1/(nIntegral), nIntegral),
+                                       multiplicities=c(as.matrix(table(intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes]))[, 1]))
+    }
   }
 }
 
@@ -127,7 +151,7 @@ computeGradNegLogLikelihood <- function(epsilon,
     term2 <-colSums(sapply(seq_along(epsilon), function(l){
       temp <-matrix(otherIntegral[intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes], l]/
                       integralValues[intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes]],
-             nrow=nrow(intermediateQuantities$indSamplesToNodes))
+                    nrow=nrow(intermediateQuantities$indSamplesToNodes))
       temp[is.na(temp)] <- 0
       return(rowSums(temp * slgpValues * intermediateQuantities$weightSamplesToNodes))
     }) / rowSums(intermediateQuantities$weightSamplesToNodes * slgpValues))

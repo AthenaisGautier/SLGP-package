@@ -10,3 +10,14 @@ crossdist <- function(x, y) {
     .Call(`_SLGP_crossdist`, x, y)
 }
 
+#' Computes the negative log likelihood
+NULL
+
+negloglike2 <- function(epsilon, y) {
+    .Call(`_SLGP_negloglike2`, epsilon, y)
+}
+
+computeLikelihoodADsimple <- function(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities) {
+    .Call(`_SLGP_computeLikelihoodADsimple`, epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities)
+}
+
