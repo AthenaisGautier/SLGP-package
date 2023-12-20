@@ -21,7 +21,7 @@ computeLikelihoodADsimple <- function(epsilon, meanFvalues, n, functionValuesInt
     .Call(`_SLGP_computeLikelihoodADsimple`, epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities)
 }
 
-computeLikelihoodAD2simple <- function(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities) {
-    .Call(`_SLGP_computeLikelihoodAD2simple`, epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities)
+computeLikelihoodADcomposed <- function(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities) {
+    .Call(`_SLGP_computeLikelihoodADcomposed`, epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities)
 }
 

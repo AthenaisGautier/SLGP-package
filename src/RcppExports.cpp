@@ -52,9 +52,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// computeLikelihoodAD2simple
-Rcpp::NumericVector computeLikelihoodAD2simple(const Eigen::VectorXd& epsilon, const Eigen::VectorXd& meanFvalues, const int n, const Eigen::MatrixXd& functionValuesInt, const int nIntegral, const Eigen::VectorXd& weightQuadrature, const Eigen::VectorXd& multiplicities);
-RcppExport SEXP _SLGP_computeLikelihoodAD2simple(SEXP epsilonSEXP, SEXP meanFvaluesSEXP, SEXP nSEXP, SEXP functionValuesIntSEXP, SEXP nIntegralSEXP, SEXP weightQuadratureSEXP, SEXP multiplicitiesSEXP) {
+// computeLikelihoodADcomposed
+Rcpp::NumericVector computeLikelihoodADcomposed(const Eigen::VectorXd& epsilon, const Eigen::VectorXd& meanFvalues, const int n, const Eigen::MatrixXd& functionValuesInt, const int nIntegral, const Eigen::VectorXd& weightQuadrature, const Eigen::VectorXd& multiplicities);
+RcppExport SEXP _SLGP_computeLikelihoodADcomposed(SEXP epsilonSEXP, SEXP meanFvaluesSEXP, SEXP nSEXP, SEXP functionValuesIntSEXP, SEXP nIntegralSEXP, SEXP weightQuadratureSEXP, SEXP multiplicitiesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,7 +65,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type nIntegral(nIntegralSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type weightQuadrature(weightQuadratureSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type multiplicities(multiplicitiesSEXP);
-    rcpp_result_gen = Rcpp::wrap(computeLikelihoodAD2simple(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities));
+    rcpp_result_gen = Rcpp::wrap(computeLikelihoodADcomposed(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -74,7 +74,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_SLGP_crossdist", (DL_FUNC) &_SLGP_crossdist, 2},
     {"_SLGP_negloglike2", (DL_FUNC) &_SLGP_negloglike2, 2},
     {"_SLGP_computeLikelihoodADsimple", (DL_FUNC) &_SLGP_computeLikelihoodADsimple, 7},
-    {"_SLGP_computeLikelihoodAD2simple", (DL_FUNC) &_SLGP_computeLikelihoodAD2simple, 7},
+    {"_SLGP_computeLikelihoodADcomposed", (DL_FUNC) &_SLGP_computeLikelihoodADcomposed, 7},
     {NULL, NULL, 0}
 };
 
