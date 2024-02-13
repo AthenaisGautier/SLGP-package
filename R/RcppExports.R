@@ -2,26 +2,12 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' Computes  the Euclidean distance between rows of two matrices
+#' @name crossdist
 #' @param x First matrix
 #' @param y Second matrix
 #' @return Euclidean distance between rows of \code{x} and \code{y}
 #' @export
 crossdist <- function(x, y) {
     .Call(`_SLGP_crossdist`, x, y)
-}
-
-#' Computes the negative log likelihood
-NULL
-
-negloglike2 <- function(epsilon, y) {
-    .Call(`_SLGP_negloglike2`, epsilon, y)
-}
-
-computeLikelihoodADsimple <- function(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities) {
-    .Call(`_SLGP_computeLikelihoodADsimple`, epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities)
-}
-
-computeLikelihoodADcomposed <- function(epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities) {
-    .Call(`_SLGP_computeLikelihoodADcomposed`, epsilon, meanFvalues, n, functionValuesInt, nIntegral, weightQuadrature, multiplicities)
 }
 

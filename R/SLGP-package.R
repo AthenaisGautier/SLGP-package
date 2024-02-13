@@ -4,9 +4,13 @@
 #' @section SLGP functions:
 #' The SLGP functions ...
 #'
-#' @docType package
 #' @name SLGP-package
 #' @aliases SLGP
+#' @useDynLib SLGP, .registration = TRUE
+#' @import methods
 #' @import Rcpp
-#' @useDynLib SLGP, .registration=TRUE
+#' @importFrom rstan sampling
+#'
+#' @references
+#' Athenais Gautier PhD thesis
 NULL
