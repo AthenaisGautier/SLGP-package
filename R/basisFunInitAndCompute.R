@@ -26,13 +26,137 @@ sample_spectral_Matern <- function(dimension, order) {
     stop("Package 'mvnfast' could not be used")
   }
   w_i <- mvnfast::rmvt(n = order,
-              mu = rep(0, dimension),
-              sigma = diag(dimension),
-              df = 5)
+                       mu = rep(0, dimension),
+                       sigma = diag(dimension),
+                       df = 5)
 
   return(w_i)
 }
 
+
+## ============================================================================
+#' Check Basis Function Parameters
+#'
+#' This function checks the parameters specified type of basis function.
+#' If some values are missing, it fills them with defaults.
+#'
+#' @param basisFunctionsUsed Character. The type of basis function to use.
+#'   Possible values: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".
+#'
+#' @param dimension Numeric. The dimension of the index
+#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
+#'
+#' @param opts_BasisFun List. Options specific to the chosen basis function.
+#' If the type is "custom cosines", the basis functions considered are \eqn{ coef\cos(freq^\top [x, t] + offset) }
+#' and the user must provide three vectors: \code{opts_BasisFun$freq}, \code{opts_BasisFun$offset} and \code{opts_BasisFun$coef}.
+#' Users can refer to the documentation of specific basis function initialization functions
+#' (e.g., \code{\link{initialize_basisfun_inducingpt}}, \code{\link{initialize_basisfun_RFF}},
+#' \code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.
+#'#'
+#' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
+#'
+#'
+#' @export
+#'
+check_basisfun_opts <- function(basisFunctionsUsed,
+                                dimension,
+                                opts_BasisFun=list()) {
+  # Check if basisFunctionsUsed is valid
+  valid_types <- c("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines")
+  if (!basisFunctionsUsed %in% valid_types) {
+    stop("Invalid basisFunctionsUsed. Choose from: 'inducing points', 'RFF', 'Discrete FF', 'filling FF', 'custom sines'")
+  }
+
+  opts_BasisFunClean <- list()
+  if (basisFunctionsUsed == "inducing points") {
+    # Add custom parameters
+    if(is.null(opts_BasisFun$numberPoints)){
+      opts_BasisFunClean$numberPoints <- 10
+      warning("You did not specify a number of anchoring points 'numberPoints' in 'opts_BasisFun', defaulted to 10")
+    }else{
+      opts_BasisFunClean$numberPoints <- opts_BasisFun$numberPoints
+    }
+    if(is.null(opts_BasisFun$kernel)){
+      opts_BasisFunClean$kernel <- "Mat52"
+      warning("You did not specify a kernel type 'kernel' in 'opts_BasisFun', defaulted to Matern 5/2")
+    }else{
+      opts_BasisFunClean$kernel <- opts_BasisFun$kernel
+    }
+    if(is.null(opts_BasisFun$pointscoord)){
+      opts_BasisFunClean$pointscoord <- matrix(runif(numberPoints*dimension), ncol=dimension)
+    }else{
+      opts_BasisFunClean$pointscoord <- opts_BasisFun$pointscoord
+    }
+  }
+  if (basisFunctionsUsed == "RFF"){
+    if(is.null(opts_BasisFun$MatParam) || 0!=((opts_BasisFun$MatParam-1/2) %%1)){
+      opts_BasisFunClean$MatParam <- 5/2
+      warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+
+    }else{
+      opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
+    }
+    if(is.null(opts_BasisFun$nFreq)){
+      opts_BasisFunClean$nFreq <- 5
+      warning("You did not specify a valid number of frequencies 'nFreq' in 'opts_BasisFun', defaulted to 5 (gives 10 basis functions).")
+    }else{
+      opts_BasisFunClean$nFreq <- opts_BasisFun$nFreq
+    }
+  }
+  if (basisFunctionsUsed == "filling FF") {
+    opts_BasisFunClean$seed <- opts_BasisFun$seed
+    if(is.null(opts_BasisFun$MatParam) | 0!=((opts_BasisFun$MatParam-1/2) %%1)){
+      opts_BasisFunClean$MatParam <- 5/2
+      warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+    }else{
+      opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
+    }
+    if(is.null(opts_BasisFun$nFreq)){
+      opts_BasisFunClean$nFreq <- 5
+      warning("You did not specify a valid number of frequencies 'nFreq' in 'opts_BasisFun', defaulted to 5 (gives 10 basis functions).")
+    }else{
+      opts_BasisFunClean$nFreq <- opts_BasisFun$nFreq
+    }
+  }
+  if (basisFunctionsUsed == "Discrete FF") {
+    if(is.null(opts_BasisFun$maxOrdert)){
+      opts_BasisFunClean$maxOrdert <- 2
+      warning("You did not specify a maximum order for t 'maxOrdert' in 'opts_BasisFun',  defaulted to 2.")
+    }else{
+      opts_BasisFunClean$maxOrdert <- opts_BasisFun$maxOrdert
+    }
+    if(is.null(opts_BasisFun$maxOrderx)){
+      opts_BasisFunClean$maxOrderx <- 2
+      warning("You did not specify a maximum order for x 'maxOrderx' in 'opts_BasisFun',  defaulted to 2.")
+    }else{
+      opts_BasisFunClean$maxOrderx <- opts_BasisFun$maxOrderx
+    }
+  }
+
+  if (basisFunctionsUsed == "custom cosines") {
+    if(is.null(opts_BasisFun$freq)){
+      stop("You did not specify a vector of frequencies 'freq' in 'opts_BasisFun' for your custom cosines.")
+    }else{
+      opts_BasisFunClean$freq <- opts_BasisFun$freq
+    }
+    if(is.null(opts_BasisFun$coef)){
+      opts_BasisFunClean$coef <- 1
+    }else{
+      opts_BasisFunClean$coef <- opts_BasisFun$coef
+    }
+    if(is.null(opts_BasisFun$offset)){
+      stop("You did not specify a vector of offsets 'offset' in 'opts_BasisFun' for your custom cosines.")
+    }else{
+      opts_BasisFunClean$offset <- opts_BasisFun$offset
+    }
+    # Add custom sines-specific parameters
+    temp <- list(freq=opts_BasisFun$freq,
+                 coef=opts_BasisFun$coef,
+                 offset=opts_BasisFun$offset)
+  }
+  opts_BasisFunClean$lengthscale <- opts_BasisFun$lengthscale
+  return(opts_BasisFunClean)
+}
 ## ============================================================================
 #' Initialize Basis Function Parameters
 #'
@@ -57,11 +181,6 @@ sample_spectral_Matern <- function(dimension, order) {
 #' @export
 #'
 initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=list()) {
-  # Check if basisFunctionsUsed is valid
-  valid_types <- c("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines")
-  if (!basisFunctionsUsed %in% valid_types) {
-    stop("Invalid basisFunctionsUsed. Choose from: 'inducing points', 'RFF', 'Discrete FF', 'filling FF', 'custom sines'")
-  }
   # Initialize parameters based on basisFunctionsUsed
   parameters <- list(
     basisFunctionsUsed = basisFunctionsUsed,
@@ -70,10 +189,6 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=lis
 
   # Additional initialization based on basisFunctionsUsed
   if (basisFunctionsUsed == "inducing points") {
-    # Add custom parameters
-    if(is.null(opts_BasisFun$kernel)){
-      opts_BasisFun$kernel <- "Mat52"
-    }
     temp <- initialize_basisfun_inducingpt(dimension=dimension,
                                            kernel = opts_BasisFun$kernel,
                                            lengthscale= opts_BasisFun$lengthscale,
@@ -137,15 +252,12 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=lis
 #' @return List. A list containing the upper triangular factor of the Cholesky decomposition of the kernel matrix as well as its inverse.
 #'
 #' @examples
-#' initialize_basisfun_inducingpt(dimension = 2, lengthscale=c(0.1, 0.1), numberPoints=5)
-#'
+#' 1+1
 #' @export
 #'
 
 initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthscale, pointscoord = NULL, numberPoints =NULL){
-  if(is.null(pointscoord)){
-    pointscoord <- matrix(runif(numberPoints*dimension), ncol=dimension)
-  }
+
   temp <- t(t(pointscoord)/lengthscale)
   distances <- crossdist(temp, temp)
   if(kernel=="Exp"){
@@ -191,17 +303,13 @@ initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthsc
 #' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
 #' @examples
-#' initialize_basisfun_RFF(dimension = 2, nFreq=10, MatParam = 5/2, lengthscale=c(0.1, 0.1))
-#'
+#' 1+1
 #' @export
 #'
 initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale) {
   # Check if basisFunctionsUsed is valid
   if (!requireNamespace("mvnfast", quietly = TRUE)) {
     stop("Package 'mvnfast' could not be used")
-  }
-  if(is.null(MatParam)){
-    MatParam<- 5/2
   }
   freq <- mvnfast::rmvt(n=nFreq, mu=rep(0, dimension),
                         sigma=diag(dimension), df=2*MatParam)
@@ -231,8 +339,7 @@ initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscal
 #' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
 #' @examples
-#' initialize_basisfun_fillingRFF(dimension = 2, nFreq=10, MatParam = 5/2, lengthscale=c(0.1, 0.1))
-#'
+#' 1+1
 #' @export
 #'
 initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale, seed=0) {
@@ -272,8 +379,7 @@ initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, len
 #' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
 #' @examples
-#' initialize_basisfun_discreteFF(dimension = 2, maxOrdert = 2, maxOrderx=3)
-#'
+#' 1+1
 #' @export
 #'
 initialize_basisfun_discreteFF <- function(dimension, maxOrdert, maxOrderx) {

@@ -1,31 +1,34 @@
-
-
 #' Spatial Logistic Gaussian Process Class
 #'
-#' @slot basisFunctionsUsed String specifying the basis functions ("poly" and/or "sines").
-#' @slot dim dimension of the predictors
-#' @slot w Optional vector of weights (if not provided by the user, it will be generated when creating the SLGP).
-#' @slot p Number of basis functions.
-#' @slot covarNames Names of the spatial predictors (indexing variables).
-#' @slot hyperpar Hyper-parameter values.
-#' @slot hyperparLower A vector specifying the expected range of the response variable.
-#' @slot hyperparUpper A list specifying the expected range for each predictor variable.
-#' @slot predictorsUpper A vector with the response upper range and lower range.
-#' @slot predictorsLower A vector with the response upper range and lower range.
+#' @slot formula Formula specifying the covariates.
+#' @slot data A data frame containing the data to train the SLGP.
+#' @slot responseName A character, specifying the name of the response.
+#' @slot covariateName A character vector, specifying the names of the covariates
 #' @slot responseRange A vector with the response upper range and lower range.
-#' @slot coefs Coefficients (epsilons) of the Spatial Logistic Gaussian Process model.
+#' @slot predictorsRange A list containing the vector 'predictorsLower' specifying the covariate's lower range
+#' and the vector 'predictorsUpper' specifying the covariate's upper range
+#' @slot method The method used to train the SLGP among {"MCMC", "MAP", "Laplace", "none"}.
+#' @slot p Number of basis functions.
+#' @slot basisFunctionsUsed String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").
+#' @slot opts_BasisFun List of extra parameters for the basis functions.
+#' @slot coefficients Matrix of epsilon's values for the finite-rank GP:
+#' \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }
+#' @slot hyperparams Hyper-parameter values.It should be a list with a numeric 'sigma' and a vector 'lengthscale'.
+#'
 #' @export
 SLGP <- setClass("SLGP",
                  slots = c(formula = "formula",
                            data = "data.frame",
+                           responseName = "character",
+                           covariateName = "character",
+                           responseRange = "numeric",
+                           predictorsRange = "list",
                            method = "character",
-                           basisFunctionsUsed = "character",
-                           w = "numeric",
                            p = "numeric",
-                           hyperparams = "list",
-                           sigmaEstimationMethod = "character",
-                           opts = "list",
-                           response_range = "numeric",
-                           predictor_ranges = "list",
-                           coefficients = "numeric")
+                           basisFunctionsUsed = "character",
+                           opts_BasisFun = "list",
+                           BasisFunParam = "list",
+                           coefficients = "matrix",
+                           hyperparams = "list")
+
 )
