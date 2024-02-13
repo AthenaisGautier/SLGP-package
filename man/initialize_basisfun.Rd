@@ -2,7 +2,7 @@
 % Please edit documentation in R/basisFunInitAndCompute.R
 \name{initialize_basisfun}
 \alias{initialize_basisfun}
-\title{Initialize Basis Function Parameters}
+\title{Initialize basis functions parameters}
 \usage{
 initialize_basisfun(basisFunctionsUsed, dimension, opts_BasisFun = list())
 }
@@ -25,5 +25,5 @@ Users can refer to the documentation of specific basis function initialization f
 List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 }
 \description{
-This function initializes parameters based on the specified type of basis function.
+This function initializes the basis function's parameters based on the specified type of basis function.
 }

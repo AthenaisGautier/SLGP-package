@@ -49,7 +49,7 @@ normalize_data <- function(data, predictorNames, responseName, predictorsUpper =
   return(normalized_data)
 }
 
-#' Compute Intermediate Quantities for Basis Function Evaluation (when no interpolation is done)
+#' Compute intermediate quantities for basis functions evaluation (when no interpolation is done)
 #'
 #' This function takes normalized data, predictor names, response name,
 #' and computes intermediate quantities useful for later evaluation of basis functions.
@@ -63,10 +63,10 @@ normalize_data <- function(data, predictorNames, responseName, predictorsUpper =
 #' @examples
 #' data <- data.frame(x1 = c(0.1, 0.5, 0.9), x2 = c(0.2, 0.6, 1.0), y = c(0.3, 0.7, 1.0))
 #' ndata <- normalize_data(data, c("x1", "x2"), "y")
-#' intermediate_quantities <- comp_int_q_nothing(ndata, c("x1", "x2"), "y")
+#' intermediate_quantities <- pre_comput_nothing(ndata, c("x1", "x2"), "y")
 #'
 #' @export
-comp_int_q_nothing <- function(normalizedData, predictorNames, responseName, nIntegral=51) {
+pre_comput_nothing <- function(normalizedData, predictorNames, responseName, nIntegral=51) {
   # Extract predictor and response columns
   predictors <- normalizedData[, predictorNames, drop = FALSE]
 
@@ -103,7 +103,7 @@ comp_int_q_nothing <- function(normalizedData, predictorNames, responseName, nIn
 }
 
 
-#' Compute Intermediate Quantities for Basis Function Evaluation (when a Nearest neighbour approximation is done)
+#' Compute intermediate quantities for basis functions evaluation (when a Nearest neighbour approximation is done)
 #'
 #' This function takes normalized data, predictor names, response name,
 #' and computes intermediate quantities useful for later evaluation of basis functions.
@@ -119,10 +119,10 @@ comp_int_q_nothing <- function(normalizedData, predictorNames, responseName, nIn
 #' @examples
 #' data <- data.frame(x1 = c(0.1, 0.5, 0.9), x2 = c(0.2, 0.6, 1.0), y = c(0.3, 0.7, 1.0))
 #' normalized_data <- normalize_data(data, c("x1", "x2"), "y")
-#' intermediate_quantities <- comp_int_q_NN(normalized_data, c("x1", "x2"), "y")
+#' intermediate_quantities <- pre_comput_NN(normalized_data, c("x1", "x2"), "y")
 #'
 #' @export
-comp_int_q_NN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=51) {
+pre_comput_NN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=51) {
   # Lets map the samples to the NN:
   normalizedData[, responseName] <- round(normalizedData[, responseName]*(nIntegral-1))/(nIntegral-1)
   normalizedData[, predictorNames] <- round(normalizedData[, predictorNames]*(nDiscret-1))/(nDiscret-1)
@@ -157,7 +157,7 @@ comp_int_q_NN <- function(normalizedData, predictorNames, responseName, nIntegra
 }
 
 
-#' Compute Intermediate Quantities for Basis Function Evaluation (when a weighted nearest neighbours interpolation is done)
+#' Compute intermediate quantities for basis functions evaluation (when a weighted nearest neighbours interpolation is done)
 #'
 #' This function takes normalized data, predictor names, response name,
 #' and computes intermediate quantities useful for later evaluation of basis functions.
@@ -173,10 +173,10 @@ comp_int_q_NN <- function(normalizedData, predictorNames, responseName, nIntegra
 #' @examples
 #' data <- data.frame(x1 = c(0.1, 0.5, 0.9), x2 = c(0.2, 0.6, 1.0), y = c(0.3, 0.7, 1.0))
 #' normalized_data <- normalize_data(data, c("x1", "x2"), "y")
-#' intermediate_quantities <- comp_int_q_WNN(normalized_data, c("x1", "x2"), "y")
+#' intermediate_quantities <- pre_comput_WNN(normalized_data, c("x1", "x2"), "y")
 #'
 #' @export
-comp_int_q_WNN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=51) {
+pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=51) {
   # Lets map the samples to the NN:
   normalizedData2<-normalizedData
   normalizedData2[, responseName] <- trunc(normalizedData[, responseName]*(nIntegral-1))/(nIntegral-1)

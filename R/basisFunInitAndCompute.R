@@ -35,9 +35,9 @@ sample_spectral_Matern <- function(dimension, order) {
 
 
 ## ============================================================================
-#' Check Basis Function Parameters
+#' Check basis function parameters
 #'
-#' This function checks the parameters specified type of basis function.
+#' This function checks the parameters specified type of basis function, and whether they are consistent.
 #' If some values are missing, it fills them with defaults.
 #'
 #' @param basisFunctionsUsed Character. The type of basis function to use.
@@ -47,13 +47,13 @@ sample_spectral_Matern <- function(dimension, order) {
 #' \eqn{[\mathbf{x},\,t]}{[x, t]}.
 #'
 #' @param opts_BasisFun List. Options specific to the chosen basis function.
-#' If the type is "custom cosines", the basis functions considered are \eqn{ coef\cos(freq^\top [x, t] + offset) }
+#' If the type is "custom cosines", the basis functions considered are: \eqn{ \text{coef} \cdot \cos(\text{freq}^\top [x, t] + \text{offset}) }
 #' and the user must provide three vectors: \code{opts_BasisFun$freq}, \code{opts_BasisFun$offset} and \code{opts_BasisFun$coef}.
 #' Users can refer to the documentation of specific basis function initialization functions
 #' (e.g., \code{\link{initialize_basisfun_inducingpt}}, \code{\link{initialize_basisfun_RFF}},
-#' \code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.
-#'#'
-#' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
+#'  \code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.
+#'
+#' @return A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
 #'
 #' @export
@@ -158,9 +158,9 @@ check_basisfun_opts <- function(basisFunctionsUsed,
   return(opts_BasisFunClean)
 }
 ## ============================================================================
-#' Initialize Basis Function Parameters
+#' Initialize basis functions parameters
 #'
-#' This function initializes parameters based on the specified type of basis function.
+#' This function initializes the basis function's parameters based on the specified type of basis function.
 #'
 #' @param basisFunctionsUsed Character. The type of basis function to use.
 #'   Possible values: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".

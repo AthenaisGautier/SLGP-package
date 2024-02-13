@@ -26,20 +26,20 @@ predictSLGP_newNode <- function(SLGPmodel,
                                    responseRange = SLGPmodel@responseRange)
   # Do we perform exact function evaluation, or we use a grid and interpolate it.
   if(interpolateBasisFun=="nothing"){
-    intermediateQuantities <- comp_int_q_nothing(normalizedData=normalizedData,
+    intermediateQuantities <- pre_comput_nothing(normalizedData=normalizedData,
                                                  predictorNames=predictorNames,
                                                  responseName=responseName,
                                                  nIntegral=nIntegral)
   }
   if(interpolateBasisFun =="NN"){
-    intermediateQuantities <- comp_int_q_NN(normalizedData=normalizedData,
+    intermediateQuantities <- pre_comput_NN(normalizedData=normalizedData,
                                             predictorNames=predictorNames,
                                             responseName=responseName,
                                             nIntegral=nIntegral,
                                             nDiscret=nDiscret)
   }
   if(interpolateBasisFun == "WNN"){
-    intermediateQuantities <- comp_int_q_WNN(normalizedData=normalizedData,
+    intermediateQuantities <- pre_comput_WNN(normalizedData=normalizedData,
                                              predictorNames=predictorNames,
                                              responseName=responseName,
                                              nIntegral=nIntegral,
@@ -104,20 +104,20 @@ predictSLGP_cdf <- function(SLGPmodel,
                                    responseRange = SLGPmodel@responseRange)
   # Do we perform exact function evaluation, or we use a grid and interpolate it.
   if(interpolateBasisFun=="nothing"){
-    intermediateQuantities <- comp_int_q_nothing(normalizedData=normalizedData,
+    intermediateQuantities <- pre_comput_nothing(normalizedData=normalizedData,
                                                  predictorNames=predictorNames,
                                                  responseName=responseName,
                                                  nIntegral=nIntegral)
   }
   if(interpolateBasisFun =="NN"){
-    intermediateQuantities <- comp_int_q_NN(normalizedData=normalizedData,
+    intermediateQuantities <- pre_comput_NN(normalizedData=normalizedData,
                                             predictorNames=predictorNames,
                                             responseName=responseName,
                                             nIntegral=nIntegral,
                                             nDiscret=nDiscret)
   }
   if(interpolateBasisFun == "WNN"){
-    intermediateQuantities <- comp_int_q_WNN(normalizedData=normalizedData,
+    intermediateQuantities <- pre_comput_WNN(normalizedData=normalizedData,
                                              predictorNames=predictorNames,
                                              responseName=responseName,
                                              nIntegral=nIntegral,

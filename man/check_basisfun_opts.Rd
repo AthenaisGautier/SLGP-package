@@ -2,7 +2,7 @@
 % Please edit documentation in R/basisFunInitAndCompute.R
 \name{check_basisfun_opts}
 \alias{check_basisfun_opts}
-\title{Check Basis Function Parameters}
+\title{Check basis function parameters}
 \usage{
 check_basisfun_opts(basisFunctionsUsed, dimension, opts_BasisFun = list())
 }
@@ -14,17 +14,16 @@ Possible values: "inducing points", "RFF", "Discrete FF", "filling FF", "custom 
 \eqn{[\mathbf{x},\,t]}{[x, t]}.}
 
 \item{opts_BasisFun}{List. Options specific to the chosen basis function.
-If the type is "custom cosines", the basis functions considered are \eqn{ coef\cos(freq^\top [x, t] + offset) }
+If the type is "custom cosines", the basis functions considered are: \eqn{ \text{coef} \cdot \cos(\text{freq}^\top [x, t] + \text{offset}) }
 and the user must provide three vectors: \code{opts_BasisFun$freq}, \code{opts_BasisFun$offset} and \code{opts_BasisFun$coef}.
 Users can refer to the documentation of specific basis function initialization functions
 (e.g., \code{\link{initialize_basisfun_inducingpt}}, \code{\link{initialize_basisfun_RFF}},
-\code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.
-#'}
+\code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.}
 }
 \value{
-List. A list containing the initialized parameters necessary for evaluating the specified basis function.
+A list containing the initialized parameters necessary for evaluating the specified basis function.
 }
 \description{
-This function checks the parameters specified type of basis function.
+This function checks the parameters specified type of basis function, and whether they are consistent.
 If some values are missing, it fills them with defaults.
 }

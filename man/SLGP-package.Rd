@@ -13,5 +13,7 @@ The SLGP functions ...
 }
 
 \references{
-Athenais Gautier PhD thesis
+Gautier, Athénaïs. (2023). \emph{Modelling and predicting distribution-valued fields with
+applications to inversion under uncertainty}. PhD Thesis, Institute of Mathematical
+Statistics and Actuarial Science, University of Bern.
 }
