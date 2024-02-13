@@ -1,5 +1,7 @@
 #include <Rcpp.h>
+
 //' Computes  the Euclidean distance between rows of two matrices
+//' @name crossdist
 //' @param x First matrix
 //' @param y Second matrix
 //' @return Euclidean distance between rows of \code{x} and \code{y}
