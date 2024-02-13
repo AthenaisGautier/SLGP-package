@@ -30,7 +30,6 @@
 #' @references
 #' Gautier, Athénaïs (2023). "Modelling and Predicting Distribution-Valued Fields with Applications to Inversion Under Uncertainty." Thesis, Universität Bern, Bern.
 #' [https://boristheses.unibe.ch/4377/]
-#' This thesis discusses modeling and predicting distribution-valued fields with Spatial Logistic Gaussian Processes.
 #'
 slgp <- function(formula,
                  data,
