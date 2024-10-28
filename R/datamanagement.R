@@ -212,7 +212,7 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
 
   # For each of the potential neighbours
   # Extract unique predictors and necessary nodes
-  predictors <- adjacentNodes[, -c(1), drop=FALSE]
+  predictors <- round(adjacentNodes[, -c(1), drop=FALSE], 15)
   uniquePredictors <- unique(predictors)
   # Where the functions need to be evaluated
   nodes <- expand.grid(seq(0, 1,, nIntegral), seq(nrow(uniquePredictors)))

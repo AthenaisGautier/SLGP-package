@@ -54,7 +54,7 @@ slgp <- function(formula,
   # If formula contains ".", extract all variables from the data
   if ("." %in% all.vars(formula)) {
     responseName <- as.character(formula[[2]])
-    predictorNames <- names(data)[-1]  # Exclude the response variable
+    predictorNames <- names(data)[names(data) != responseName]  # Exclude the response variable
   } else {
     # Extract response and predictor variables from the formula
     responseName <- as.character(formula[[2]])
@@ -76,7 +76,7 @@ slgp <- function(formula,
   if(is.null(predictorsLower)){
     predictorsLower<- apply(data[, predictorNames, drop=FALSE], 2, min)
   }else{
-    predictorsLower<- pmax(predictorsLower,
+    predictorsLower<- pmin(predictorsLower,
                            apply(data[, predictorNames, drop=FALSE], 2, min))
   }
   if(is.null(responseRange)){
@@ -122,10 +122,10 @@ slgp <- function(formula,
                                        dimension=dimension,
                                        opts_BasisFun=opts_BasisFun)
   if(is.null(BasisFunParam)){
-
     ## Initialise the basis functions to use
     initBasisFun <- initialize_basisfun(basisFunctionsUsed=basisFunctionsUsed,
                                         dimension=dimension,
+                                        lengthscale = lengthscale,
                                         opts_BasisFun=opts_BasisFun)
   }else{
     initBasisFun <-BasisFunParam
@@ -279,6 +279,9 @@ slgp <- function(formula,
       hessian = FALSE)
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
+  }
+  if(method=="none"){
+    epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
   }
   gc()
   return(SLGP(formula = formula,
