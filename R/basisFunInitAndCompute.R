@@ -89,12 +89,16 @@ check_basisfun_opts <- function(basisFunctionsUsed,
     }
   }
   if (basisFunctionsUsed == "RFF"){
-    if(is.null(opts_BasisFun$MatParam) || 0!=((opts_BasisFun$MatParam-1/2) %%1)){
+    if(is.null(opts_BasisFun$MatParam)){
       opts_BasisFunClean$MatParam <- 5/2
       warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
 
     }else{
-      opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
+      if(is.infinite(opts_BasisFun$MatParam) || 0==((opts_BasisFun$MatParam-1/2) %%1)){
+        opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
+      }else{
+        warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+      }
     }
     if(is.null(opts_BasisFun$nFreq)){
       opts_BasisFunClean$nFreq <- 5
@@ -105,11 +109,16 @@ check_basisfun_opts <- function(basisFunctionsUsed,
   }
   if (basisFunctionsUsed == "filling FF") {
     opts_BasisFunClean$seed <- opts_BasisFun$seed
-    if(is.null(opts_BasisFun$MatParam) | 0!=((opts_BasisFun$MatParam-1/2) %%1)){
+    if(is.null(opts_BasisFun$MatParam)){
       opts_BasisFunClean$MatParam <- 5/2
       warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+      
     }else{
-      opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
+      if(is.infinite(opts_BasisFun$MatParam) || 0==((opts_BasisFun$MatParam-1/2) %%1)){
+        opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
+      }else{
+        warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+      }
     }
     if(is.null(opts_BasisFun$nFreq)){
       opts_BasisFunClean$nFreq <- 5
