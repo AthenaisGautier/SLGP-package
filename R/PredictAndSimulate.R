@@ -146,6 +146,7 @@ predictSLGP_cdf <- function(SLGPmodel,
       return(cdf)
     }))
   })
+  intermediateQuantities$indSamplesToNodes[is.na(intermediateQuantities$indSamplesToNodes)]<- 1
   res<- sapply(seq(ncol(SLGPcvalues)), function(i){
     unname(rowSums(sapply(seq(ncol(intermediateQuantities$indSamplesToNodes)), function(j){
       return(SLGPcvalues[intermediateQuantities$indSamplesToNodes[, j], i]*
@@ -190,29 +191,31 @@ sampleSLGP <- function(SLGPmodel,
   if(length(nsamp)==1 & npred >1){
     nsamp <- rep(nsamp, npred)
   }
-  if(length(n)>npred){
+  if(length(nsamp)>npred){
     warning("There are more \'n\'s than covariates provided.")
   }
   # Create a grid at which we want the cdfs.
   grid <- expand.grid(u, seq(npred))
   grid <- data.frame(cbind(grid[, 1], newX[grid[, 2], ]))
   colnames(grid)<- c(SLGPmodel@responseName, colnames(newX))
-
+  
   cdfs <- predictSLGP_cdf(SLGPmodel=SLGPmodel,
                           newNodes=grid,
                           interpolateBasisFun = interpolateBasisFun,
                           nIntegral=nIntegral,
                           nDiscret=nDiscret)
   mean_cdfs <- rowMeans(cdfs[, -c(1:ncol(grid)), drop=FALSE])
-  res <- lapply(seq(npred), function(i){
-    temp <- mean_cdfs[(i-1)*nIntegral+1:nIntegral]
+  res <- lapply(seq(npred), function(j){
+    temp <- mean_cdfs[(j-1)*nIntegral+1:nIntegral]
     f <- approxfun(x=u, y=temp)
     finv<-GoFKernel::inverse(f,
                              lower=SLGPmodel@responseRange[1],
                              upper=SLGPmodel@responseRange[2])
-    r <- runif(nsamp[i])
+    # plot(f, from=0, to=1)
+    # range(temp)
+    r <- runif(nsamp[j])
     y<-  sapply(r, finv)
-    df <- data.frame(unname(y), unname(newX[rep(i, nsamp[i]), , drop=FALSE]))
+    df <- data.frame(unname(y), unname(newX[rep(j, nsamp[j]), , drop=FALSE]))
     colnames(df)<- c(SLGPmodel@responseName, colnames(newX))
     return(df)
   })

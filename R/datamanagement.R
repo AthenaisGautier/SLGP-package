@@ -21,31 +21,31 @@
 normalize_data <- function(data, predictorNames, responseName, predictorsUpper = NULL, predictorsLower = NULL, responseRange = NULL) {
   # Check if predictor and response names exist in the dataframe
   stopifnot("The predictor names are not all in the dataset colnames"=all(predictorNames %in% colnames(data)), responseName %in% colnames(data))
-
+  
   # Extract predictor and response columns
   predictors <- data[, predictorNames, drop = FALSE]
   response <- data[[responseName]]
-
+  
   # Use observed values if range information is not provided
   if (is.null(predictorsUpper) || is.null(predictorsLower)) {
     predictorsUpper <- apply(predictors, 2, max, na.rm = TRUE)
     predictorsLower <- apply(predictors, 2, min, na.rm = TRUE)
   }
-
+  
   if (is.null(responseRange)) {
     responseRange <- c(min(response, na.rm = TRUE), max(response, na.rm = TRUE))
   }
-
+  
   # Normalize predictors to the range [0, 1]
   normalized_predictors <- scale(predictors, center = predictorsLower, scale = predictorsUpper - predictorsLower)
-
+  
   # Normalize response to the range [0, 1]
   normalized_response <- (response - responseRange[1]) / (responseRange[2] - responseRange[1])
-
+  
   # Create a new dataframe with normalized values
   normalized_data <- cbind(normalized_response, normalized_predictors)
   colnames(normalized_data) <- c(responseName, predictorNames)
-
+  
   return(normalized_data)
 }
 
@@ -69,27 +69,27 @@ normalize_data <- function(data, predictorNames, responseName, predictorsUpper =
 pre_comput_nothing <- function(normalizedData, predictorNames, responseName, nIntegral=51) {
   # Extract predictor and response columns
   predictors <- normalizedData[, predictorNames, drop = FALSE]
-
+  
   # Extract unique predictors and necessary nodes
   uniquePredictors <- unique(predictors)
   nodesIntegral <- expand.grid(seq(0, 1,, nIntegral), seq(nrow(uniquePredictors)))
   nodesIntegral <- cbind(nodesIntegral[, 1], uniquePredictors[nodesIntegral[, 2], ]) #All the values useful in the integral
   colnames(nodesIntegral) <- c(responseName, predictorNames)
-
+  
   # Where the functions need to be evaluated
   nodes <- unique(rbind(nodesIntegral, normalizedData))
-
+  
   # Which integral is the node used in
   indNodesToIntegral <-  c(match(data.frame(t(nodesIntegral[, -c(1)])), data.frame(t(uniquePredictors))),
                            rep(NA, nrow(nodes)-nIntegral*nrow(uniquePredictors)))
-
+  
   # Index of the node to use for each sample point
   indSamplesToNodes <-  as.matrix(match(data.frame(t(normalizedData)), data.frame(t(nodes))))
   # Index of the integral to use for each sample point
   indSamplesToPredictor <-  match(data.frame(t(normalizedData[, -c(1)])), data.frame(t(uniquePredictors)))
   # Corresponding weight
   weightSamplesToNodes <- as.matrix(rep(1, length(indSamplesToNodes)))
-
+  
   # Return a list of intermediate quantities
   intermediate_quantities <- list(
     nodes = nodes,
@@ -98,7 +98,7 @@ pre_comput_nothing <- function(normalizedData, predictorNames, responseName, nIn
     indSamplesToPredictor=indSamplesToPredictor,
     weightSamplesToNodes = weightSamplesToNodes
   )
-
+  
   return(intermediate_quantities)
 }
 
@@ -126,25 +126,25 @@ pre_comput_NN <- function(normalizedData, predictorNames, responseName, nIntegra
   # Lets map the samples to the NN:
   normalizedData[, responseName] <- round(normalizedData[, responseName]*(nIntegral-1))/(nIntegral-1)
   normalizedData[, predictorNames] <- round(normalizedData[, predictorNames]*(nDiscret-1))/(nDiscret-1)
-
+  
   predictors <- normalizedData[, predictorNames, drop = FALSE]
-
+  
   # Extract unique predictors and necessary nodes
   uniquePredictors <- unique(predictors)
   # Where the functions need to be evaluated
   nodes <- expand.grid(seq(0, 1,, nIntegral), seq(nrow(uniquePredictors)))
   nodes <- cbind(nodes[, 1], uniquePredictors[nodes[, 2], ]) #All the values useful in the integral
   colnames(nodes) <- c(responseName, predictorNames)
-
+  
   # Which integral is the node used in
   indNodesToIntegral <-  c(match(data.frame(t(nodes[, -c(1)])), data.frame(t(uniquePredictors))),
                            rep(NA, nrow(nodes)-nIntegral*nrow(uniquePredictors)))
-
+  
   # Index of the node to use for each sample point
   indSamplesToNodes <-   as.matrix(match(data.frame(t(normalizedData)), data.frame(t(nodes))))
   # Corresponding weight
   weightSamplesToNodes <- as.matrix(rep(1, length(indSamplesToNodes)))
-
+  
   # Return a list of intermediate quantities
   intermediate_quantities <- list(
     nodes = nodes,
@@ -152,7 +152,7 @@ pre_comput_NN <- function(normalizedData, predictorNames, responseName, nIntegra
     indSamplesToNodes = indSamplesToNodes,
     weightSamplesToNodes = weightSamplesToNodes
   )
-
+  
   return(intermediate_quantities)
 }
 
@@ -181,7 +181,7 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
   normalizedData2<-normalizedData
   normalizedData2[, responseName] <- trunc(normalizedData[, responseName]*(nIntegral-1))/(nIntegral-1)
   normalizedData2[, predictorNames] <- trunc(normalizedData[, predictorNames]*(nDiscret-1))/(nDiscret-1)
-
+  
   # We need to extract the predictor, and edit it to add all the dimensions
   predictors <- normalizedData2
   neighboursStructure <- t(expand.grid(rep(list(c(0,1/(nDiscret-1))), length(predictorNames)+1)))
@@ -205,11 +205,14 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
       return(1-max(abs(x-y)*c(nIntegral-1, rep(nDiscret-1, length(predictorNames)))))
     })
   }))
-  weightSamplesToNodes[is.na(weightSamplesToNodes)]<-0
+  weightSamplesToNodes[is.na(weightSamplesToNodes)] <-0
+  indSamplesToNodes[is.na(indSamplesToNodes)]<- 1
+  
+  weightSamplesToNodes <- abs(weightSamplesToNodes)
   weightSamplesToNodes <- weightSamplesToNodes / rowSums(weightSamplesToNodes)
   rm(neighboursStructure, predictors)
   gc()
-
+  
   # For each of the potential neighbours
   # Extract unique predictors and necessary nodes
   predictors <- round(adjacentNodes[, -c(1), drop=FALSE], 15)
@@ -218,15 +221,16 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
   nodes <- expand.grid(seq(0, 1,, nIntegral), seq(nrow(uniquePredictors)))
   nodes <- cbind(nodes[, 1], uniquePredictors[nodes[, 2], ]) #All the values useful in the integral
   colnames(nodes) <- c(responseName, predictorNames)
-
+  
   # Which integral is the node used in
   indNodesToIntegral <-  c(match(data.frame(t(nodes[, -c(1)])), data.frame(t(uniquePredictors))))
-
+  
   # Index of the node to use for each sample point
   indTemp <- c(match(data.frame(t(adjacentNodes)), data.frame(t(nodes))))
   indSamplesToNodes <- matrix(indTemp[indSamplesToNodes], nrow=nrow(indSamplesToNodes))
   rm(indTemp)
-
+  
+  
   # Return a list of intermediate quantities
   intermediate_quantities <- list(
     nodes = nodes,
@@ -234,6 +238,6 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
     indSamplesToNodes = indSamplesToNodes,
     weightSamplesToNodes = weightSamplesToNodes
   )
-
+  
   return(intermediate_quantities)
 }
