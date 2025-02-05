@@ -4,7 +4,12 @@
 \alias{initialize_basisfun}
 \title{Initialize basis functions parameters}
 \usage{
-initialize_basisfun(basisFunctionsUsed, dimension, opts_BasisFun = list())
+initialize_basisfun(
+  basisFunctionsUsed,
+  dimension,
+  lengthscale,
+  opts_BasisFun = list()
+)
 }
 \arguments{
 \item{basisFunctionsUsed}{Character. The type of basis function to use.
