@@ -29,7 +29,7 @@ sample_spectral_Matern <- function(dimension, order) {
                        mu = rep(0, dimension),
                        sigma = diag(dimension),
                        df = 5)
-
+  
   return(w_i)
 }
 
@@ -66,12 +66,16 @@ check_basisfun_opts <- function(basisFunctionsUsed,
   if (!basisFunctionsUsed %in% valid_types) {
     stop("Invalid basisFunctionsUsed. Choose from: 'inducing points', 'RFF', 'Discrete FF', 'filling FF', 'custom sines'")
   }
-
+  
   opts_BasisFunClean <- list()
   if (basisFunctionsUsed == "inducing points") {
     # Add custom parameters
     if(is.null(opts_BasisFun$numberPoints)){
-      opts_BasisFunClean$numberPoints <- 10
+      if(!is.null(opts_BasisFun$pointscoord)){
+        opts_BasisFunClean$numberPoints <- nrow(opts_BasisFun$pointscoord)
+      }else{
+        opts_BasisFunClean$numberPoints <- 10
+      }
       warning("You did not specify a number of anchoring points 'numberPoints' in 'opts_BasisFun', defaulted to 10")
     }else{
       opts_BasisFunClean$numberPoints <- opts_BasisFun$numberPoints
@@ -92,13 +96,14 @@ check_basisfun_opts <- function(basisFunctionsUsed,
     if(is.null(opts_BasisFun$MatParam)){
       opts_BasisFunClean$MatParam <- 5/2
       warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
-
     }else{
-      if(is.infinite(opts_BasisFun$MatParam) || 0==((opts_BasisFun$MatParam-1/2) %%1)){
-        opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
-      }else{
-        warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+      if(!is.infinite(opts_BasisFun$MatParam)){
+        if(0!=((opts_BasisFun$MatParam-1/2) %%1)){
+          opts_BasisFunClean$MatParam <- 5/2
+          warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
+        }
       }
+      opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
     }
     if(is.null(opts_BasisFun$nFreq)){
       opts_BasisFunClean$nFreq <- 5
@@ -109,16 +114,11 @@ check_basisfun_opts <- function(basisFunctionsUsed,
   }
   if (basisFunctionsUsed == "filling FF") {
     opts_BasisFunClean$seed <- opts_BasisFun$seed
-    if(is.null(opts_BasisFun$MatParam)){
+    if(is.null(opts_BasisFun$MatParam) | 0!=((opts_BasisFun$MatParam-1/2) %%1)){
       opts_BasisFunClean$MatParam <- 5/2
       warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
-      
     }else{
-      if(is.infinite(opts_BasisFun$MatParam) || 0==((opts_BasisFun$MatParam-1/2) %%1)){
-        opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
-      }else{
-        warning("You did not specify a valid Matern parameter 'MatParam' in 'opts_BasisFun', defaulted to Matern 5/2.")
-      }
+      opts_BasisFunClean$MatParam <- opts_BasisFun$MatParam
     }
     if(is.null(opts_BasisFun$nFreq)){
       opts_BasisFunClean$nFreq <- 5
@@ -141,7 +141,7 @@ check_basisfun_opts <- function(basisFunctionsUsed,
       opts_BasisFunClean$maxOrderx <- opts_BasisFun$maxOrderx
     }
   }
-
+  
   if (basisFunctionsUsed == "custom cosines") {
     if(is.null(opts_BasisFun$freq)){
       stop("You did not specify a vector of frequencies 'freq' in 'opts_BasisFun' for your custom cosines.")
@@ -189,18 +189,18 @@ check_basisfun_opts <- function(basisFunctionsUsed,
 #'
 #' @export
 #'
-initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=list()) {
+initialize_basisfun <- function(basisFunctionsUsed, dimension, lengthscale, opts_BasisFun=list()) {
   # Initialize parameters based on basisFunctionsUsed
   parameters <- list(
     basisFunctionsUsed = basisFunctionsUsed,
     dimension = dimension
   )
-
+  
   # Additional initialization based on basisFunctionsUsed
   if (basisFunctionsUsed == "inducing points") {
     temp <- initialize_basisfun_inducingpt(dimension=dimension,
                                            kernel = opts_BasisFun$kernel,
-                                           lengthscale= opts_BasisFun$lengthscale,
+                                           lengthscale= lengthscale,
                                            pointscoord = opts_BasisFun$pointscoord,
                                            numberPoints = opts_BasisFun$numberPoints)
     parameters[["kernel"]] <-opts_BasisFun$kernel
@@ -213,13 +213,13 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=lis
       temp <- initialize_basisfun_RFF(dimension=dimension,
                                       nFreq=opts_BasisFun$nFreq,
                                       MatParam = opts_BasisFun$MatParam,
-                                      lengthscale=opts_BasisFun$lengthscale)
+                                      lengthscale=lengthscale)
     }
     if (basisFunctionsUsed == "filling FF") {
       temp <- initialize_basisfun_fillingRFF(dimension=dimension,
                                              nFreq=opts_BasisFun$nFreq,
                                              MatParam = opts_BasisFun$MatParam,
-                                             lengthscale=opts_BasisFun$lengthscale,
+                                             lengthscale=lengthscale,
                                              seed=opts_BasisFun$seed)
     }
     if (basisFunctionsUsed == "Discrete FF") {
@@ -227,7 +227,7 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=lis
                                              maxOrdert=opts_BasisFun$maxOrdert,
                                              maxOrderx=opts_BasisFun$maxOrderx)
     }
-
+    
     if (basisFunctionsUsed == "custom cosines") {
       # Add custom sines-specific parameters
       temp <- list(freq=opts_BasisFun$freq,
@@ -266,7 +266,7 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, opts_BasisFun=lis
 #'
 
 initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthscale, pointscoord = NULL, numberPoints =NULL){
-
+  
   temp <- t(t(pointscoord)/lengthscale)
   distances <- crossdist(temp, temp)
   if(kernel=="Exp"){
@@ -282,13 +282,13 @@ initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthsc
     K <- exp(-distances^2/2)
   }
   eig <- eigen(K)
-  eig$values <- abs(eig$values)/2+eig$values/2
+  eig$values <- abs(eig$values)/2+eig$values/2+1e-20
   if(any(eig$values==0)){
     stop("The inducing points/kernel provided make the covariance matrix ill-conditioned. Select different points or regularise, please.")
   }
   Ksqrt <- eig$vectors %*% diag(sqrt(eig$values)) %*% t(eig$vectors)
   Kinvsqrt <- eig$vectors %*% diag(1/sqrt(eig$values)) %*% t(eig$vectors)
-
+  
   # for Y ~ N(0, K), Y %*% Kinvsqrt ~ N(0, I)
   return(list(sqrtInv_covMat=Kinvsqrt, sqrt_covMat=Ksqrt, lengthCoord=temp))
 }
@@ -320,8 +320,13 @@ initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscal
   if (!requireNamespace("mvnfast", quietly = TRUE)) {
     stop("Package 'mvnfast' could not be used")
   }
-  freq <- mvnfast::rmvt(n=nFreq, mu=rep(0, dimension),
-                        sigma=diag(dimension), df=2*MatParam)
+  if(!is.infinite(MatParam)){
+    freq <- mvnfast::rmvt(n=nFreq, mu=rep(0, dimension),
+                          sigma=diag(dimension), df=2*MatParam)
+  }else{
+    freq <-  mvnfast::rmvn(n=nFreq, mu=rep(0, dimension),
+                           sigma=4*diag(dimension))
+  }
   freq <- rbind(freq, freq)
   offset <- c(rep(0, nFreq), rep(-pi/2, nFreq))
   coef <- rep(1/sqrt(nFreq), 2*nFreq)
@@ -365,7 +370,7 @@ initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, len
   }
   X <- lhsDesign(nFreq, dimension, seed=seed)$design
   Xopt <- maximinSA_LHS(X, T0=10, c=0.99, it=2000)$design
-
+  
   freq <- rosenblatt_transform_multivarStudent(Xopt, dimension = dimension, MatParam=MatParam)
   freq <- rbind(freq, freq)
   offset <- c(rep(0, nFreq), rep(-pi/2, nFreq))
@@ -414,7 +419,7 @@ initialize_basisfun_discreteFF <- function(dimension, maxOrdert, maxOrderx) {
   freq <- rbind(ai_temp, ai_temp)
   offset <- c(rep(0, nFreq/2), rep(-pi/2, nFreq/2))
   coef <- rep(1/sqrt(nFreq), nFreq)
-
+  
   return(list(freq=freq, offset=offset, coef=coef))
 }
 
@@ -464,54 +469,5 @@ evaluate_basis_functions <- function(parameters, X, lengthscale) {
     basis_fun <- t(parameters$coef*basis_fun)
     return(basis_fun)
   }
-}
-
-
-#' A Heuristic function to find the empirical range of the unconditioned SLGP
-#'
-#' @title Heuristic function to find the range of values of the unconditioned SLGP.
-#'
-#' @param parameters A list containing outputs of initialize_basisfun.
-#'
-#' @param nsimu An integer giving the number of unconditional simulations to use.
-#'
-#' @param grid_size An integer giving the number of nodes in each dimension of the grid to consider.
-#'
-#' @param plot A boolean indicating whether a ngraphical output is produced.
-#'
-#' @return A matrix with the evaluated basis functions.
-#'
-#' @export
-#'
-heuristic_find_variance <- function(parameters, nsimu=1000,
-                                    grid_size=101, plot=FALSE){
-  # dimension <- par_basis_functions$dimension
-  # order_tot <- par_basis_functions$order_tot
-  # type <- par_basis_functions$type
-  # epsilon <- matrix(rnorm(nsimu*order_tot), ncol=order_tot)
-  # X <- expand.grid(rep(list(seq(0, 1,, grid_size)), dimension))
-  # X <- t(t(X)/lengthscale)
-  # if(par_basis_functions$type=="inducing points"){
-  #   colnames(X)<- inputNames(par_basis_functions$kernel)
-  # }
-  # funX <- evaluate_basis_functions(par_basis_functions, X)
-  # GPX <- funX%*% t(epsilon)
-  # range_size <- apply(GPX, 2, function(x){
-  #   return(diff(range(x)))
-  # })
-  # if(plot){
-  #   require(ggplot2)
-  #   show(ggplot(data.frame(x=range_size), aes(x=x))+
-  #          geom_histogram(mapping=aes(y=..density..),bins=30, alpha=0.1, col="black")+
-  #          geom_density(lty=2)+
-  #          geom_vline(xintercept = mean(range_size), col="blue", lwd=2)+
-  #          geom_vline(xintercept = median(range_size), col="darkgreen", lwd=2)+
-  #          theme_bw()+
-  #          labs(caption=paste0("Mean: ", round(mean(range_size), 2), " (blue).\n",
-  #                              "Median: ", round(mean(range_size), 2), " (green)."))+
-  #          ggtitle("Range of values (max-min) of the GP"))
-  # }
-  # return(range_size)
-  return(0)
 }
 
