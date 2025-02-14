@@ -65,7 +65,6 @@ slgp <- function(formula,
     stop("Not all predictor variables in the formula are present in the data.")
   }
   #
-  
   ## Bring the range of data to [0, 1]
   if(is.null(predictorsUpper)){
     predictorsUpper<- apply(data[, predictorNames, drop=FALSE], 2, max)
@@ -130,12 +129,12 @@ slgp <- function(formula,
   }else{
     initBasisFun <-BasisFunParam
   }
-  
+
   ## Evaluate basis funs on nodes
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
-  
+
   if(sigmaEstimationMethod=="heuristic"){
     Nsim <- 50
     resSim <- sapply(seq(Nsim), function(i){
@@ -207,12 +206,12 @@ slgp <- function(formula,
       )
     }
   }
-  
+
   # Call the right estimation method
   if(is.null(epsilonStart)){
     epsilonStart <- rnorm(ncol(functionValues))
   }
-  
+
   # Estimation
   if(method=="MCMC"){
     stan_chains <- opts$stan_chains
@@ -264,13 +263,13 @@ slgp <- function(formula,
         nugget <- 10*nugget
       }
     }
-    
+
     epsilon <- mvnfast::rmvn(n = ndraws,
                              mu = mode,
                              sigma = sigma,
                              ncores=2)
-    
-    
+
+
   }
   if(method=="MAP"){
     fit <- rstan::optimizing(
@@ -285,7 +284,7 @@ slgp <- function(formula,
   }
   gc()
   return(SLGP(formula = formula,
-              data=data,
+              data = data,
               responseName = responseName,
               covariateName = predictorNames,
               method = method,
@@ -335,13 +334,13 @@ retrainSLGP <- function(SLGPmodel,
   predictorNames <- SLGPmodel@covariateName
   predictorsUpper<- SLGPmodel@predictorsRange$upper
   predictorsLower<-SLGPmodel@predictorsRange$lower
-  
+
   responseRange <-SLGPmodel@responseRange
-  
+
   if(!is.null(newdata)){
     SLGPmodel@data <- newdata
   }
-  
+
   normalizedData <- normalize_data(data=SLGPmodel@data,
                                    predictorNames = predictorNames,
                                    responseName = responseName,
@@ -349,13 +348,13 @@ retrainSLGP <- function(SLGPmodel,
                                    predictorsLower = predictorsLower,
                                    responseRange = responseRange)
   dimension <- ncol(normalizedData)
-  
+
   if(!is.null(hyperparams)){
     SLGPmodel@hyperparams <- hyperparams
   }
   lengthscale <- SLGPmodel@hyperparams$lengthscale
   sigma2 <- SLGPmodel@hyperparams$sigma2
-  
+
   # Do we perform exact function evaluation, or we use a grid and interpolate it.
   if(interpolateBasisFun=="nothing"){
     intermediateQuantities <- pre_comput_nothing(normalizedData=normalizedData,
@@ -377,15 +376,15 @@ retrainSLGP <- function(SLGPmodel,
                                              nIntegral=nIntegral,
                                              nDiscret=nDiscret)
   }
-  
+
   initBasisFun <-SLGPmodel@BasisFunParam
-  
-  
+
+
   ## Evaluate basis funs on nodes
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
-  
+
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
     if(file.exists("./data/composed_model.rds")){
@@ -407,7 +406,7 @@ retrainSLGP <- function(SLGPmodel,
       p = ncol(functionValues),
       functionValues = functionValues,
       weightMatrix = temp2,
-      indMatrix = as.integer(temp),
+      indMatrix =temp,
       weightQuadrature = rep(1/nIntegral, nIntegral),
       Sigma = diag(sigma2, ncol(functionValues)),
       mean_x = rep(0, ncol(functionValues))
@@ -449,12 +448,13 @@ retrainSLGP <- function(SLGPmodel,
       )
     }
   }
-  
+
+
   # Call the right estimation method
   if(is.null(epsilonStart)){
     epsilonStart <- rnorm(ncol(functionValues))
   }
-  
+
   # Estimation
   if(method=="MCMC"){
     stan_chains <- opts$stan_chains
@@ -506,13 +506,13 @@ retrainSLGP <- function(SLGPmodel,
         nugget <- 10*nugget
       }
     }
-    
+
     epsilon <- mvnfast::rmvn(n = ndraws,
                              mu = mode,
                              sigma = sigma,
                              ncores=2)
-    
-    
+
+
   }
   if(method=="MAP"){
     fit <- rstan::optimizing(
@@ -522,6 +522,10 @@ retrainSLGP <- function(SLGPmodel,
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
   }
+  if(method=="none"){
+    epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
+  }
+  gc()
   SLGPmodel@coefficients <- epsilon
   SLGPmodel@hyperparams <- list(sigma2=sigma2, lengthscale=lengthscale)
   SLGPmodel@method <- method
