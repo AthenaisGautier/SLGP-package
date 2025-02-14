@@ -32,7 +32,7 @@ slgp(
 \item{epsilonStart}{An optional numeric vector, the starting weights in the finite-rank GP:
 \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }}
 
-\item{method}{The method to be used among {"MCMC", "MAP", "Laplace"}.}
+\item{method}{The method to be used among {"none", "MCMC", "MAP", "Laplace"}.}
 
 \item{basisFunctionsUsed}{String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").}
 

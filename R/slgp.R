@@ -8,7 +8,7 @@
 #' @param data A data frame containing the variables in the formula.
 #' @param epsilonStart An optional numeric vector, the starting weights in the finite-rank GP:
 #' \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }
-#' @param method The method to be used among {"MCMC", "MAP", "Laplace"}.
+#' @param method The method to be used among {"none", "MCMC", "MAP", "Laplace"}.
 #' @param basisFunctionsUsed String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").
 #' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WNN").
 #' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
@@ -65,7 +65,7 @@ slgp <- function(formula,
     stop("Not all predictor variables in the formula are present in the data.")
   }
   #
-
+  
   ## Bring the range of data to [0, 1]
   if(is.null(predictorsUpper)){
     predictorsUpper<- apply(data[, predictorNames, drop=FALSE], 2, max)
@@ -130,12 +130,12 @@ slgp <- function(formula,
   }else{
     initBasisFun <-BasisFunParam
   }
-
+  
   ## Evaluate basis funs on nodes
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
-
+  
   if(sigmaEstimationMethod=="heuristic"){
     Nsim <- 50
     resSim <- sapply(seq(Nsim), function(i){
@@ -207,12 +207,12 @@ slgp <- function(formula,
       )
     }
   }
-
+  
   # Call the right estimation method
   if(is.null(epsilonStart)){
     epsilonStart <- rnorm(ncol(functionValues))
   }
-
+  
   # Estimation
   if(method=="MCMC"){
     stan_chains <- opts$stan_chains
@@ -264,13 +264,13 @@ slgp <- function(formula,
         nugget <- 10*nugget
       }
     }
-
+    
     epsilon <- mvnfast::rmvn(n = ndraws,
                              mu = mode,
                              sigma = sigma,
                              ncores=2)
-
-
+    
+    
   }
   if(method=="MAP"){
     fit <- rstan::optimizing(
@@ -321,7 +321,7 @@ retrainSLGP <- function(SLGPmodel,
                         newdata=NULL,
                         epsilonStart =NULL,
                         method,
-                        interpolateBasisFun="NN",
+                        interpolateBasisFun="WNN",
                         nIntegral=51,
                         nDiscret=51,
                         hyperparams = NULL,
@@ -331,27 +331,31 @@ retrainSLGP <- function(SLGPmodel,
   if(!is.null(seed)){
     set.seed(seed)
   }
-  responseName <- SLPGmodel@responseName
-  predictorNames <- SLPGmodel@covariateName
-  predictorsUpper<- SLPGmodel@predictorsRange$upper
-  predictorsLower<-SLPGmodel@predictorsRange$lower
-
-  responseRange <-SLPGmodel@responseRange
-
+  responseName <- SLGPmodel@responseName
+  predictorNames <- SLGPmodel@covariateName
+  predictorsUpper<- SLGPmodel@predictorsRange$upper
+  predictorsLower<-SLGPmodel@predictorsRange$lower
+  
+  responseRange <-SLGPmodel@responseRange
+  
   if(!is.null(newdata)){
-    SLPGmodel@data <- newdata
+    SLGPmodel@data <- newdata
   }
-
-  normalizedData <- normalize_data(data=SLPGmodel@data,
+  
+  normalizedData <- normalize_data(data=SLGPmodel@data,
                                    predictorNames = predictorNames,
                                    responseName = responseName,
                                    predictorsUpper = predictorsUpper,
                                    predictorsLower = predictorsLower,
                                    responseRange = responseRange)
   dimension <- ncol(normalizedData)
-  if(is.null(hyperparams)){
-    hyperparams <- SLGPmodel@hyperparams
+  
+  if(!is.null(hyperparams)){
+    SLGPmodel@hyperparams <- hyperparams
   }
+  lengthscale <- SLGPmodel@hyperparams$lengthscale
+  sigma2 <- SLGPmodel@hyperparams$sigma2
+  
   # Do we perform exact function evaluation, or we use a grid and interpolate it.
   if(interpolateBasisFun=="nothing"){
     intermediateQuantities <- pre_comput_nothing(normalizedData=normalizedData,
@@ -373,15 +377,15 @@ retrainSLGP <- function(SLGPmodel,
                                              nIntegral=nIntegral,
                                              nDiscret=nDiscret)
   }
-
-  initBasisFun <-BasisFunParam
-
-
+  
+  initBasisFun <-SLGPmodel@BasisFunParam
+  
+  
   ## Evaluate basis funs on nodes
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
-
+  
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
     if(file.exists("./data/composed_model.rds")){
@@ -445,12 +449,12 @@ retrainSLGP <- function(SLGPmodel,
       )
     }
   }
-
+  
   # Call the right estimation method
   if(is.null(epsilonStart)){
     epsilonStart <- rnorm(ncol(functionValues))
   }
-
+  
   # Estimation
   if(method=="MCMC"){
     stan_chains <- opts$stan_chains
@@ -502,13 +506,13 @@ retrainSLGP <- function(SLGPmodel,
         nugget <- 10*nugget
       }
     }
-
+    
     epsilon <- mvnfast::rmvn(n = ndraws,
                              mu = mode,
                              sigma = sigma,
                              ncores=2)
-
-
+    
+    
   }
   if(method=="MAP"){
     fit <- rstan::optimizing(
@@ -518,8 +522,8 @@ retrainSLGP <- function(SLGPmodel,
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
   }
-  SLPGmodel@coefficients <- epsilon
-  SLPGmodel@hyperparams <- list(sigma2=sigma2, lengthscale=lengthscale)
-  SLPGmodel@method <- method
-  return(SLPGmodel)
+  SLGPmodel@coefficients <- epsilon
+  SLGPmodel@hyperparams <- list(sigma2=sigma2, lengthscale=lengthscale)
+  SLGPmodel@method <- method
+  return(SLGPmodel)
 }

@@ -9,7 +9,7 @@ retrainSLGP(
   newdata = NULL,
   epsilonStart = NULL,
   method,
-  interpolateBasisFun = "NN",
+  interpolateBasisFun = "WNN",
   nIntegral = 51,
   nDiscret = 51,
   hyperparams = NULL,
