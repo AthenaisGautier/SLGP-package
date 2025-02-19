@@ -2,14 +2,7 @@
 title: "Introduction to SLGP Package"
 author: "Athénaïs Gautier"
 output:
-  # html_document:
-  bookdown::pdf_document2 :
-    keep_tex: false
-    toc: false
-    number_sections: true
-    citation_package: natbib
-header-includes:
-  - \usepackage{float}
+  html_document:
 bibliography: references.bib
 ---
 
@@ -46,7 +39,7 @@ range_x <- c(0, 100) # Can use range(df$age), or user defined range as we do her
 ```
 
 We represent the data.
-```{r figureHousing, fig.cap = "Figure 1: A visual representation of the dependency of the median value of owner-occupied homes on proportion of owner-occupied units constructed before 1940 in the Boston Housing dataset.", fig.fullwidth=TRUE, fig.height=4, fig.width=10, fig.align='center',fig.pos="H"}
+```{r figureHousing, fig.cap = "A visual representation of the dependency of the median value of owner-occupied homes on proportion of owner-occupied units constructed before 1940 in the Boston Housing dataset.", fig.fullwidth=TRUE, fig.height=4, fig.width=10, fig.align='center',fig.pos="H"}
 library(ggplot2)
 library(ggpubr)
 library(viridis)
@@ -112,7 +105,7 @@ modelPrior <- slgp(medv~age, # Use a formula to specify predictors VS response
 ```
 
 
-```{r SLGPplottingPrior1, fig.cap = "Figure 1: Samples from the SLGP Prior for the pdfs of MEDV at AGE, visualised across slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
+```{r SLGPplottingPrior1, fig.cap = "Samples from the SLGP Prior for the pdfs of MEDV at AGE, visualised across slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
 
 
 library(tidyr)
@@ -158,7 +151,7 @@ ggsave(paste0("./Figures/ribbonsPrior",  ".pdf"), width=10, height=5)
 ```
 
 
-```{r SLGPplottingPrior2, fig.cap = "Figure 2: Samples from the SLGP Prior versus histograms of median value at bins centered at several 'age' values", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
+```{r SLGPplottingPrior2, fig.cap = "Samples from the SLGP Prior versus histograms of median value at bins centered at several 'age' values", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
 
 selected_values <- c(20, 50, 95)
 gap <- 2.5
@@ -269,7 +262,7 @@ modelMAP <- slgp(medv~age,
 
 We can represent the conditional density as a colormap.
 
-```{r SLGPplotting1, fig.cap = "Figure 3: Predictive probability density of medv at age, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+```{r SLGPplotting1, fig.cap = "Predictive probability density of medv at age, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"}
 dfGrid <- data.frame(expand.grid(seq(range_x[1], range_x[2],, 101), 
                                  seq(range_response[1], range_response[2],, 101)))
 colnames(dfGrid) <- c("age", "medv")
@@ -300,7 +293,7 @@ ggplot()  +
 ```
 
 
-```{r SLGPplotting2, fig.cap = "Figure 4: Predictive probability density of medv at age, seen over slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
+```{r SLGPplotting2, fig.cap = "Predictive probability density of medv at age, seen over slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
 
 
 library(SLGP)
@@ -363,7 +356,7 @@ modelLaplace <- slgp(medv~age, # Use a formula to specify predictors VS response
                                           MatParam=5/2))
 ```
 
-```{r SLGPLaplaceplot, fig.cap = "Figure 5: Predictive probability density (and draws from a Laplace approximation) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+```{r SLGPLaplaceplot, fig.cap = "Predictive probability density (and draws from a Laplace approximation) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=4, fig.width=8, fig.align='center',fig.pos="H"}
 # Define the three selected values
 selected_values <- c(20, 50, 95)
 gap <- 2.5
@@ -449,7 +442,7 @@ modelMCMC <- slgp(medv~age, # Use a formula to specify predictors VS response
                   opts = list(stan_chains=2, stan_iter=1000))
 ```
 
-```{r SLGPMCMCplot, fig.cap = "Figure 6: Predictive probability density (and draws from a MCMC) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+```{r SLGPMCMCplot, fig.cap = "Predictive probability density (and draws from a MCMC) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=4, fig.width=8, fig.align='center',fig.pos="H"}
 # Define the three selected values
 pred <- predictSLGP_newNode(SLGPmodel=modelMCMC,
                             newNodes = dfGrid)
