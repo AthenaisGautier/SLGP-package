@@ -1,39 +1,3 @@
-# ============================================================================
-#' Sample frequencies from the Spectral density of a Matérn GP.
-#'
-#' @title Draw Random Frequencies from the Spectral Density of Matérn Kernel
-#'
-#' @param dimension The dimension of the space for the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
-#'
-#' @param order Number of frequencies.
-#'
-#' @return A matrix of frequencies with \code{order} rows and
-#' \code{dimension} columns.
-#'
-#'
-#' @importFrom mvnfast rmvt
-#'
-#' @export
-#'
-#' @examples
-#' w <- sample_spectral_Matern(dimension = 1, order = 10000)
-#' plot(density(w)); rug(w)
-#' w <- sample_spectral_Matern(dimension = 2, order = 100)
-#'
-sample_spectral_Matern <- function(dimension, order) {
-  if (!requireNamespace("mvnfast", quietly = TRUE)) {
-    stop("Package 'mvnfast' could not be used")
-  }
-  w_i <- mvnfast::rmvt(n = order,
-                       mu = rep(0, dimension),
-                       sigma = diag(dimension),
-                       df = 5)
-  
-  return(w_i)
-}
-
-
 ## ============================================================================
 #' Check basis function parameters
 #'
@@ -66,7 +30,7 @@ check_basisfun_opts <- function(basisFunctionsUsed,
   if (!basisFunctionsUsed %in% valid_types) {
     stop("Invalid basisFunctionsUsed. Choose from: 'inducing points', 'RFF', 'Discrete FF', 'filling FF', 'custom sines'")
   }
-  
+
   opts_BasisFunClean <- list()
   if (basisFunctionsUsed == "inducing points") {
     # Add custom parameters
@@ -141,7 +105,7 @@ check_basisfun_opts <- function(basisFunctionsUsed,
       opts_BasisFunClean$maxOrderx <- opts_BasisFun$maxOrderx
     }
   }
-  
+
   if (basisFunctionsUsed == "custom cosines") {
     if(is.null(opts_BasisFun$freq)){
       stop("You did not specify a vector of frequencies 'freq' in 'opts_BasisFun' for your custom cosines.")
@@ -195,7 +159,7 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, lengthscale, opts
     basisFunctionsUsed = basisFunctionsUsed,
     dimension = dimension
   )
-  
+
   # Additional initialization based on basisFunctionsUsed
   if (basisFunctionsUsed == "inducing points") {
     temp <- initialize_basisfun_inducingpt(dimension=dimension,
@@ -227,7 +191,7 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, lengthscale, opts
                                              maxOrdert=opts_BasisFun$maxOrdert,
                                              maxOrderx=opts_BasisFun$maxOrderx)
     }
-    
+
     if (basisFunctionsUsed == "custom cosines") {
       # Add custom sines-specific parameters
       temp <- list(freq=opts_BasisFun$freq,
@@ -266,7 +230,7 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, lengthscale, opts
 #'
 
 initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthscale, pointscoord = NULL, numberPoints =NULL){
-  
+
   temp <- t(t(pointscoord)/lengthscale)
   distances <- crossdist(temp, temp)
   if(kernel=="Exp"){
@@ -288,7 +252,7 @@ initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthsc
   }
   Ksqrt <- eig$vectors %*% diag(sqrt(eig$values)) %*% t(eig$vectors)
   Kinvsqrt <- eig$vectors %*% diag(1/sqrt(eig$values)) %*% t(eig$vectors)
-  
+
   # for Y ~ N(0, K), Y %*% Kinvsqrt ~ N(0, I)
   return(list(sqrtInv_covMat=Kinvsqrt, sqrt_covMat=Ksqrt, lengthCoord=temp))
 }
@@ -370,7 +334,7 @@ initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, len
   }
   X <- lhsDesign(nFreq, dimension, seed=seed)$design
   Xopt <- maximinSA_LHS(X, T0=10, c=0.99, it=2000)$design
-  
+
   freq <- rosenblatt_transform_multivarStudent(Xopt, dimension = dimension, MatParam=MatParam)
   freq <- rbind(freq, freq)
   offset <- c(rep(0, nFreq), rep(-pi/2, nFreq))
@@ -419,7 +383,7 @@ initialize_basisfun_discreteFF <- function(dimension, maxOrdert, maxOrderx) {
   freq <- rbind(ai_temp, ai_temp)
   offset <- c(rep(0, nFreq/2), rep(-pi/2, nFreq/2))
   coef <- rep(1/sqrt(nFreq), nFreq)
-  
+
   return(list(freq=freq, offset=offset, coef=coef))
 }
 

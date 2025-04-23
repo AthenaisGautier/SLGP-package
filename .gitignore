@@ -2,3 +2,5 @@
 SLGP.Rcheck/
 inst/doc
 src/SLGP.dll
+vignettes/.Rhistory
+.Rhistory
