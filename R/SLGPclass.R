@@ -14,6 +14,7 @@
 #' @slot coefficients Matrix of epsilon's values for the finite-rank GP:
 #' \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }
 #' @slot hyperparams Hyper-parameter values.It should be a list with a numeric 'sigma' and a vector 'lengthscale'.
+#' @slot logPost log-posterior value returned by Stan (up to a constant), currently implemented only for MAP and Laplace estimations
 #'
 #' @export
 SLGP <- setClass("SLGP",

@@ -241,6 +241,7 @@ slgp <- function(formula,
     # print(ess[-c(length(ess))])
     cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
     rstan::check_energy(fit)
+    logPost <- NA # To implement later
   }
   if(method=="Laplace"){
     fit <- rstan::optimizing(
@@ -269,7 +270,7 @@ slgp <- function(formula,
                              sigma = sigma,
                              ncores=2)
 
-
+    logPost <- c(fit$value)
   }
   if(method=="MAP"){
     fit <- rstan::optimizing(
@@ -278,9 +279,12 @@ slgp <- function(formula,
       hessian = FALSE)
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
+    # The log-posterior value
+    logPost <- c(fit$value)
   }
   if(method=="none"){
     epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
+    logPost <- NA
   }
   gc()
   return(SLGP(formula = formula,
@@ -295,7 +299,8 @@ slgp <- function(formula,
               opts_BasisFun=opts_BasisFun,
               BasisFunParam=initBasisFun,
               coefficients = epsilon,
-              hyperparams=list(sigma2=sigma2, lengthscale=lengthscale)))
+              hyperparams=list(sigma2=sigma2, lengthscale=lengthscale),
+              logPost=logPost))
 }
 
 #' Retrain a SLGP by changing the data and/or method.
@@ -484,6 +489,7 @@ retrainSLGP <- function(SLGPmodel,
     # print(ess[-c(length(ess))])
     cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
     rstan::check_energy(fit)
+    logPost <- NA
   }
   if(method=="Laplace"){
     fit <- rstan::optimizing(
@@ -512,6 +518,7 @@ retrainSLGP <- function(SLGPmodel,
                              sigma = sigma,
                              ncores=2)
 
+    logPost <- c(fit$value)
 
   }
   if(method=="MAP"){
@@ -521,13 +528,18 @@ retrainSLGP <- function(SLGPmodel,
       hessian = FALSE)
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
+    logPost <- c(fit$value)
+
   }
   if(method=="none"){
     epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
+    logPost <- NA
+
   }
   gc()
   SLGPmodel@coefficients <- epsilon
   SLGPmodel@hyperparams <- list(sigma2=sigma2, lengthscale=lengthscale)
   SLGPmodel@method <- method
+  SLGPmodel@logPost <- logPost
   return(SLGPmodel)
 }
