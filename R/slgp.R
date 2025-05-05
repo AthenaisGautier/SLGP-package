@@ -241,7 +241,7 @@ slgp <- function(formula,
     # print(ess[-c(length(ess))])
     cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
     rstan::check_energy(fit)
-    logPost <- Inf # To implement later
+    logPost <- NaN # To implement later
   }
   if(method=="Laplace"){
     fit <- rstan::optimizing(
@@ -284,7 +284,7 @@ slgp <- function(formula,
   }
   if(method=="none"){
     epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
-    logPost <- Inf
+    logPost <- NaN
   }
   gc()
   return(SLGP(formula = formula,
@@ -489,7 +489,7 @@ retrainSLGP <- function(SLGPmodel,
     # print(ess[-c(length(ess))])
     cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
     rstan::check_energy(fit)
-    logPost <- Inf
+    logPost <- NaN
   }
   if(method=="Laplace"){
     fit <- rstan::optimizing(
@@ -533,7 +533,7 @@ retrainSLGP <- function(SLGPmodel,
   }
   if(method=="none"){
     epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
-    logPost <- Inf
+    logPost <- NaN
 
   }
   gc()
