@@ -30,6 +30,7 @@ SLGP <- setClass("SLGP",
                            opts_BasisFun = "list",
                            BasisFunParam = "list",
                            coefficients = "matrix",
-                           hyperparams = "list")
+                           hyperparams = "list",
+                           logPost = "numeric")
 
 )
