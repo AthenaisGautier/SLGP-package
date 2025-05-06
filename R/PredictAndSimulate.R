@@ -362,7 +362,7 @@ predictSLGP_moments <- function(SLGPmodel,
 
   IDpredX <- c(sapply(seq(nrow(newNodesX)), function(x){rep(x, length(power))}))
   res<- data.frame(cbind(newNodesX[IDpredX, ] ,power, res))
-  colnames(res) <- c(predictorNames, "power", paste0("mSLGP_", seq(ncol(SLGPcvalues))))
+  colnames(res) <- c(predictorNames, "power", paste0("mSLGP_", seq(ncol(SLGPvalues))))
   return(res)
 }
 #' Draw new samples from a SLGP model
