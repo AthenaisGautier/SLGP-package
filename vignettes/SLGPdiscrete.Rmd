@@ -256,7 +256,7 @@ ggplot() +
 
 Yes. 
 
-Also out of curiosty, what if we don't rename the label 24 ?
+Also out of curiosity, what if we don't rename the label 24 ?
 
 ```{r SLGPfittingandPlotting3, fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
 df <- Boston 
