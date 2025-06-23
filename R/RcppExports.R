@@ -6,6 +6,7 @@
 #' @param x First matrix
 #' @param y Second matrix
 #' @return Euclidean distance between rows of \code{x} and \code{y}
+#' @keywords internal
 crossdist <- function(x, y) {
     .Call(`_SLGP_crossdist`, x, y)
 }

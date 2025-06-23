@@ -17,3 +17,4 @@ Euclidean distance between rows of \code{x} and \code{y}
 \description{
 Computes  the Euclidean distance between rows of two matrices
 }
+\keyword{internal}
