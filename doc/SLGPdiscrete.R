@@ -1,29 +1,10 @@
----
-title: "SLGP with integer outputs"
-author: "Athénaïs Gautier"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{SLGP with integer outputs}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r, include = FALSE}
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-```
 
-This vignette serves as a quick guide to Spatial Logistic Gaussian Process (SLGP) modeling, with a focus on predicting distributions for integer outputs. 
-
-# Dataset
-We illustrate the model's capabilities using the Boston Housing dataset @harrison_hedonic_1978, a widely used benchmark in statistical modeling and regression analysis. 
-
-In this vignette, we demonstrate how to model the distribution of rad (index of accessibility to radial highways, between 1 and 24 where 24 indicates the best accessibility and 1 the worst) as a function of medv (median value of owner-occupied homes) and dis (weighted distance to employment centers) using Spatial Logistic Gaussian Processes (SLGPs). Since rad is an integer-valued variable, our goal is to adjust the implementation for this.
-
-
-```{r loadHousing}
+## ----loadHousing--------------------------------------------------------------
 library(dplyr)
 # Load the dataset (available in MASS package)
 if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
@@ -34,10 +15,8 @@ range_x <- matrix(c(c(1, 13),
                     range(df$medv)), # Use c(1, 13) instead of range = c(1.1296 12.1265)
                   # For easier chunks
                   ncol=2, byrow=TRUE)
-```
 
-We represent the data.
-```{r figureHousing, fig.cap = "Figure 1: Index of Accessibility to Radial Highways as a Function of Home Value and Distance to Employment Centers", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"}
+## ----figureHousing, fig.cap = "Figure 1: Index of Accessibility to Radial Highways as a Function of Home Value and Distance to Employment Centers", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"----
 library(ggplot2)
 library(ggpubr)
 
@@ -58,12 +37,8 @@ ggplot(df, aes(x = dis, y=medv, fill=as.factor(rad))) +
                                             title.hjust = 0.5))+
   theme(legend.position = "bottom")
 
-```
 
-We propose mapping the value 24 to 9 for rad, resulting in a more compact domain
-
-
-```{r figureHousing2, fig.cap ="Figure 2: Index of Accessibility to Radial Highways as a Function of Home Value and Distance to Employment Centers, with rescaled indices", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"}
+## ----figureHousing2, fig.cap ="Figure 2: Index of Accessibility to Radial Highways as a Function of Home Value and Distance to Employment Centers, with rescaled indices", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"----
 df$rad <- ifelse(df$rad==24, 9, df$rad) 
 range_response <- range(df$rad)
 
@@ -83,11 +58,8 @@ ggplot(df, aes(x = dis, y=medv, fill=factor(rad, levels=seq(9)))) +
                                             label.position = "bottom",
                                             title.hjust = 0.5))+
   theme(legend.position = "bottom")
-```
 
-We can also display the empirical probabilities. For that, we use "bins" for the samples, as there are no replicates.
-
-```{r figureHousing3, fig.cap ="Figure 3: Distribution of RAD across bins of various home value and distance to employment centers", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+## ----figureHousing3, fig.cap ="Figure 3: Distribution of RAD across bins of various home value and distance to employment centers", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"----
 
 # Create interval variables for medv and dis
 df <- df %>%
@@ -117,16 +89,8 @@ ggplot(df, aes(x = rad, y = after_stat(prop))) +
   theme(legend.position = "bottom")+
   scale_x_continuous(breaks = c(1:9)) 
 
-```
 
-
-# SLGP model specifications
-
-
-## Maximum a posteriori estimate
-
-
-```{r SLGPfitting}
+## ----SLGPfitting--------------------------------------------------------------
 library(SLGP)
 
 modelMAP <- slgp(rad~dis+medv, # Use a formula with two indexing variables
@@ -145,11 +109,8 @@ modelMAP <- slgp(rad~dis+medv, # Use a formula with two indexing variables
                  responseRange= range_response,
                  opts_BasisFun = list(nFreq=200,
                                       MatParam=5/2))
-```
 
-We can represent the conditional probabilities. For that, we use "bins" for the samples, as there are no replicates. We display the histograms of values in these bins compared to SLGP predictions of the probabilities at the center of the bins.
-
-```{r SLGPplotting1, fig.cap = "Figure 2: Predictive probabilities of rad at medv and dis, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+## ----SLGPplotting1, fig.cap = "Figure 2: Predictive probabilities of rad at medv and dis, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"----
 library(viridis)
 dfGrid <- data.frame(expand.grid(seq(range_x[1, 1], range_x[1, 2], 0.5), 
                                  seq(range_x[2, 1], range_x[2, 2], 1), 
@@ -185,12 +146,8 @@ ggplot() +
   theme_minimal() +
   theme(legend.position = "bottom")+
   scale_x_continuous(breaks = c(1:9)) 
-```
 
-Just out of curiosity, what would happen if I "inflate" the dataset by repeating it 10 times ? Will the SLGP follow the histogram more closely ? 
-
-
-```{r SLGPfitting2}
+## ----SLGPfitting2-------------------------------------------------------------
 library(SLGP)
 df2 <- rbind(df, df, df, df, df, 
              df, df, df, df, df)
@@ -210,10 +167,8 @@ modelMAP2 <- slgp(rad~dis+medv, # Use a formula with two indexing variables
                   responseRange= range_response,
                   opts_BasisFun = list(nFreq=200,
                                        MatParam=5/2))
-```
 
-
-```{r SLGPplotting2, fig.cap = "Figure 2: Predictive probabilities of rad at medv and dis, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+## ----SLGPplotting2, fig.cap = "Figure 2: Predictive probabilities of rad at medv and dis, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"----
 library(viridis)
 dfGrid <- data.frame(expand.grid(seq(range_x[1, 1], range_x[1, 2], 0.5), 
                                  seq(range_x[2, 1], range_x[2, 2], 1), 
@@ -249,13 +204,8 @@ ggplot() +
   theme_minimal() +
   theme(legend.position = "bottom")+
   scale_x_continuous(breaks = c(1:9)) 
-```
 
-Yes. 
-
-Also out of curiosity, what if we don't rename the label 24 ?
-
-```{r SLGPfittingandPlotting3, fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"}
+## ----SLGPfittingandPlotting3, fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"----
 df <- Boston 
 range_response <- range(df$rad)
 # Create interval variables for medv and dis
@@ -328,5 +278,4 @@ ggplot() +
   theme_minimal() +
   theme(legend.position = "bottom")+
   scale_x_continuous(breaks = c(c(1:8), 24)) 
-```
 

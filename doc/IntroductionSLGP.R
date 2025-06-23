@@ -1,28 +1,10 @@
----
-title: "Introduction to SLGP Package"
-author: "Athénaïs Gautier"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Introduction to SLGP Package}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-```{r, include = FALSE}
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-```
 
-This vignette serves as a startup guide to SLGP modeling, providing a practical introduction to the implementation of Spatial Logistic Gaussian Processes (SLGPs). 
-
-# Dataset
-We illustrate the model's capabilities using the Boston Housing dataset @harrison_hedonic_1978, a widely used benchmark in statistical modeling and regression analysis. 
-
-For this vignette, we focus on modeling the distribution of median home values (med) as a function of the proportion of pre-1940 owner-occupied units (age). This example highlights the ability of SLGPs to capture complex, spatially dependent distributions in data that exhibit heterogeneity and multi-modality. 
-
-```{r loadHousing, warning=FALSE}
+## ----loadHousing, warning=FALSE-----------------------------------------------
 library(dplyr)
 # Load the dataset (available in MASS package)
 if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
@@ -38,10 +20,8 @@ df <- Boston %>%
 
 range_response <- c(0, 50) # Can use range(df$medv), or user defined range as we do here
 range_x <- c(0, 100) # Can use range(df$age), or user defined range as we do here
-```
 
-We represent the data.
-```{r figureHousing, fig.cap = "A visual representation of the dependency of the median value of owner-occupied homes on proportion of owner-occupied units constructed before 1940 in the Boston Housing dataset.", fig.fullwidth=TRUE, fig.height=4, fig.width=10, fig.align='center',fig.pos="H"}
+## ----figureHousing, fig.cap = "A visual representation of the dependency of the median value of owner-occupied homes on proportion of owner-occupied units constructed before 1940 in the Boston Housing dataset.", fig.fullwidth=TRUE, fig.height=4, fig.width=10, fig.align='center',fig.pos="H"----
 library(ggplot2)
 library(ggpubr)
 library(viridis)
@@ -71,18 +51,8 @@ hist_plot <- ggplot(df, aes(x = medv)) +
 ggarrange(scatter_plot, hist_plot, ncol = 2, nrow = 1,
           widths = c(0.3, 0.7))
 # ggsave("./Figures/scatter.pdf", width=10, height=3.5)
-```
 
-
-We see that there is a general trend where older homes tend to have lower values, with exceptions likely due to survivor bias: older homes that remain tend to be of higher structural quality. This dataset provides an test case for SLGP modeling, offering a compact, one-dimensional covariate space, heterogeneously distributed data, and shifting distributional shapes.
-
-# SLGP model specifications
-
-To model the distributional changes observed in the Boston Housing dataset, we now introduce the Spatial Logistic Gaussian Process (SLGP) model. SLGPs provide a flexible non-parametric framework for modeling spatially dependent probability densities. By transforming a Gaussian Process (GP) through exponentiation and normalization, SLGPs ensure positivity and integration to one, making them well-suited for density estimation.
-
-## Prior
-
-```{r SLGPprior}
+## ----SLGPprior----------------------------------------------------------------
 library(SLGP)
 
 modelPrior <- slgp(medv~age, # Use a formula to specify predictors VS response
@@ -104,10 +74,8 @@ modelPrior <- slgp(medv~age, # Use a formula to specify predictors VS response
                    opts_BasisFun = list(nFreq=200,
                                         MatParam=5/2),
                    seed=1)
-```
 
-
-```{r SLGPplottingPrior1, fig.cap = "Samples from the SLGP Prior for the pdfs of MEDV at AGE, visualised across slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
+## ----SLGPplottingPrior1, fig.cap = "Samples from the SLGP Prior for the pdfs of MEDV at AGE, visualised across slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"----
 
 
 library(tidyr)
@@ -150,10 +118,8 @@ ggplot()  +
 # ggsave(paste0("./Figures/ribbonsPrior",  ".pdf"), width=10, height=5)
 
 
-```
 
-
-```{r SLGPplottingPrior2, fig.cap = "Samples from the SLGP Prior versus histograms of median value at bins centered at several 'age' values", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
+## ----SLGPplottingPrior2, fig.cap = "Samples from the SLGP Prior versus histograms of median value at bins centered at several 'age' values", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"----
 
 selected_values <- c(20, 50, 95)
 gap <- 2.5
@@ -205,66 +171,56 @@ ggplot(mapping=aes(x = medv)) +
 
 # ggsave(paste0("./Figures/histPrior",  ".pdf"), width=10, height=5)
 
-```
 
-## Maximum a posteriori estimate
+## ----SLGPfitting00, eval=FALSE------------------------------------------------
+#  modelMAP <- slgp(medv~age, # Use a formula to specify predictors VS response
+#                   # Can use medv~. for all variables,
+#                   # Or medv ~ age + var2 + var3 for more variables
+#                   data=df,
+#                   method="MAP", #Maximum a posteriori estimation scheme
+#                   basisFunctionsUsed = "RFF",
+#                   interpolateBasisFun="WNN", # Accelerate inference
+#                   hyperparams = list(lengthscale=c(0.15, 0.15),
+#                                      # Applied to normalised data
+#                                      # So 0.15 is 15% of the range of values
+#                                      sigma2=1),
+#                   # Will be re-selected with sigmaEstimationMethod
+#                   sigmaEstimationMethod = "heuristic",
+#                   # Set to heuristic for numerical stability
+#                   predictorsLower= c(range_x[1]),
+#                   predictorsUpper= c(range_x[2]),
+#                   responseRange= range_response,
+#                   opts_BasisFun = list(nFreq=200,
+#                                        MatParam=5/2),
+#                   seed=1)
 
-For a quicker approximation, MAP estimation provides a point estimate, offering a balance between computational efficiency and the depth of inference. It is the fastest estimation scheme we propose, however MAP does not facilitate uncertainty quantification because it yields a non-probabilistic estimate of the underlying density field, focusing instead on identifying the mode of the posterior distribution. 
-
-```{r SLGPfitting00, eval=FALSE}
-modelMAP <- slgp(medv~age, # Use a formula to specify predictors VS response
-                 # Can use medv~. for all variables,
-                 # Or medv ~ age + var2 + var3 for more variables
-                 data=df,
-                 method="MAP", #Maximum a posteriori estimation scheme
-                 basisFunctionsUsed = "RFF",
-                 interpolateBasisFun="WNN", # Accelerate inference
-                 hyperparams = list(lengthscale=c(0.15, 0.15), 
-                                    # Applied to normalised data
-                                    # So 0.15 is 15% of the range of values
-                                    sigma2=1), 
-                 # Will be re-selected with sigmaEstimationMethod
-                 sigmaEstimationMethod = "heuristic", 
-                 # Set to heuristic for numerical stability                 
-                 predictorsLower= c(range_x[1]),
-                 predictorsUpper= c(range_x[2]),
-                 responseRange= range_response,
-                 opts_BasisFun = list(nFreq=200,
-                                      MatParam=5/2),
-                 seed=1)
-```
-
-```{r SLGPfitting01}
+## ----SLGPfitting01------------------------------------------------------------
 # Or equivalent, re-use the same basis functions 
 # and hyper parameters as in the prior we saw
 
 modelMAP <- retrainSLGP(SLGPmodel=modelPrior, 
                         newdata = df, 
                         method="MAP")
-```
 
-```{r SLGPfitting02, eval=FALSE}
-# Or equivalent, more explicit in the re-using of the elements
-# From the SLGP prior
+## ----SLGPfitting02, eval=FALSE------------------------------------------------
+#  # Or equivalent, more explicit in the re-using of the elements
+#  # From the SLGP prior
+#  
+#  modelMAP <- slgp(medv~age,
+#                   data=df,
+#                   method="MAP", #Maximum a posteriori estimation scheme
+#                   basisFunctionsUsed = "RFF",
+#                   interpolateBasisFun="WNN", # Accelerate inference
+#                   hyperparams = modelPrior@hyperparams,
+#                   sigmaEstimationMethod = "none",# Already selected in the prior
+#                   predictorsLower= c(range_x[1]),
+#                   predictorsUpper= c(range_x[2]),
+#                   responseRange= range_response,
+#                   opts_BasisFun = modelPrior@opts_BasisFun,
+#                   BasisFunParam = modelPrior@BasisFunParam,
+#                   seed=1)
 
-modelMAP <- slgp(medv~age, 
-                 data=df,
-                 method="MAP", #Maximum a posteriori estimation scheme
-                 basisFunctionsUsed = "RFF",
-                 interpolateBasisFun="WNN", # Accelerate inference
-                 hyperparams = modelPrior@hyperparams, 
-                 sigmaEstimationMethod = "none",# Already selected in the prior
-                 predictorsLower= c(range_x[1]),
-                 predictorsUpper= c(range_x[2]),
-                 responseRange= range_response,
-                 opts_BasisFun = modelPrior@opts_BasisFun,
-                 BasisFunParam = modelPrior@BasisFunParam,
-                 seed=1)
-```
-
-We can represent the conditional density as a colormap.
-
-```{r SLGPplotting1, fig.cap = "Predictive probability density of medv at age, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"}
+## ----SLGPplotting1, fig.cap = "Predictive probability density of medv at age, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=6, fig.align='center',fig.pos="H"----
 dfGrid <- data.frame(expand.grid(seq(range_x[1], range_x[2],, 101), 
                                  seq(range_response[1], range_response[2],, 101)))
 colnames(dfGrid) <- c("age", "medv")
@@ -292,10 +248,8 @@ ggplot()  +
   theme(legend.position = "bottom")
 
 
-```
 
-
-```{r SLGPplotting2, fig.cap = "Predictive probability density of medv at age, seen over slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
+## ----SLGPplotting2, fig.cap = "Predictive probability density of medv at age, seen over slices.", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"----
 
 
 library(SLGP)
@@ -329,15 +283,8 @@ ggplot()  +
   theme(legend.position = "bottom")+
   coord_flip()
 
-```
 
-
-
-## Laplace approximation estimate
-
-By integrating the MAP approach with Laplace approximation, we refine our estimation strategy by approximating the posterior distribution with a multivariate Gaussian. This method strikes a balance between the full Bayesian inference of MCMC and the computational efficiency of MAP estimation. By leveraging both the gradient and Hessian of the posterior, it captures essential curvature information, providing a more informed approximation of the posterior landscape.
-
-```{r SLGPfitting2}
+## ----SLGPfitting2-------------------------------------------------------------
 modelLaplace <- slgp(medv~age, # Use a formula to specify predictors VS response
                      # Can use medv~. for all variables,
                      # Or medv ~ age + var2 + var3 for more variables
@@ -356,9 +303,8 @@ modelLaplace <- slgp(medv~age, # Use a formula to specify predictors VS response
                      responseRange= range_response,
                      opts_BasisFun = list(nFreq=100,
                                           MatParam=5/2))
-```
 
-```{r SLGPLaplaceplot, fig.cap = "Predictive probability density (and draws from a Laplace approximation) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=4, fig.width=8, fig.align='center',fig.pos="H"}
+## ----SLGPLaplaceplot, fig.cap = "Predictive probability density (and draws from a Laplace approximation) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=4, fig.width=8, fig.align='center',fig.pos="H"----
 # Define the three selected values
 selected_values <- c(20, 50, 95)
 gap <- 2.5
@@ -415,14 +361,8 @@ ggplot(mapping=aes(x = medv)) +
   coord_cartesian(xlim=range_response,
                   ylim=c(0, 0.25))
 
-```
 
-
-## MCMC estimate
-
-This method allows us to explore the posterior distribution by drawing samples from it. It enables precise, exact inference of the posterior distribution of the underlying density field knowing the data. The main drawback of this approach being its higher computational cost
-
-```{r SLGPfitting3}
+## ----SLGPfitting3-------------------------------------------------------------
 modelMCMC <- slgp(medv~age, # Use a formula to specify predictors VS response
                   # Can use medv~. for all variables,
                   # Or medv ~ age + var2 + var3 for more variables
@@ -442,9 +382,8 @@ modelMCMC <- slgp(medv~age, # Use a formula to specify predictors VS response
                   opts_BasisFun = list(nFreq=100,
                                        MatParam=5/2),
                   opts = list(stan_chains=2, stan_iter=1000))
-```
 
-```{r SLGPMCMCplot, fig.cap = "Predictive probability density (and draws from a MCMC) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=4, fig.width=8, fig.align='center',fig.pos="H"}
+## ----SLGPMCMCplot, fig.cap = "Predictive probability density (and draws from a MCMC) of medv at age, seen over 3 slices.", fig.fullwidth=TRUE, fig.height=4, fig.width=8, fig.align='center',fig.pos="H"----
 # Define the three selected values
 pred <- predictSLGP_newNode(SLGPmodel=modelMCMC,
                             newNodes = dfGrid)
@@ -474,4 +413,4 @@ ggplot(mapping=aes(x = medv)) +
   coord_cartesian(xlim=range_response,
                   ylim=c(0, 0.25))
 
-```
+
