@@ -9,10 +9,6 @@
 #'
 #' @return A matrix with transformed coordinates following a multivariate Student distribution.
 #'
-#' @examples
-#' data <- matrix(c(0, 0, 0.1, 0.9, 0.5, 0.5, 0.1, 0.1), ncol = 2, byrow = TRUE)
-#' rosenblatt_transform_multivarStudent(data, dimension = 2)
-#'
 #' @importFrom stats qt
 #'
 #' @keywords internal

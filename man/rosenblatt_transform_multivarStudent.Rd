@@ -20,9 +20,4 @@ A matrix with transformed coordinates following a multivariate Student distribut
 Auxiliary function that maps uniform samples in [0, 1]^d to samples from the spectral density
 of a Matérn kernel (i.e., a multivariate Student distribution).
 }
-\examples{
-data <- matrix(c(0, 0, 0.1, 0.9, 0.5, 0.5, 0.1, 0.1), ncol = 2, byrow = TRUE)
-rosenblatt_transform_multivarStudent(data, dimension = 2)
-
-}
 \keyword{internal}
