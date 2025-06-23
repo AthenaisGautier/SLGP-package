@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanagement.R
 \name{pre_comput_NN}
 \alias{pre_comput_NN}
-\title{Compute intermediate quantities for basis functions evaluation (when a Nearest neighbour approximation is done)}
+\title{pre_comput_NN: Precompute quantities for SLGP basis evaluation with nearest-neighbor interpolation}
 \usage{
 pre_comput_NN(
   normalizedData,
@@ -13,26 +13,36 @@ pre_comput_NN(
 )
 }
 \arguments{
-\item{normalizedData}{A dataframe containing the normalized dataset.}
+\item{normalizedData}{A normalized data frame (values in \eqn{[0,1]}).}
 
-\item{predictorNames}{A character vector specifying the names of the predictor variables.}
+\item{predictorNames}{Character vector of covariate names.}
 
-\item{responseName}{A character string specifying the name of the response variable.}
+\item{responseName}{Name of the response variable.}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Number of grid points for discretizing the response domain.}
 
-\item{nDiscret}{Number of points used to discretize the predictors' domain.}
+\item{nDiscret}{Number of grid points for discretizing the covariate domain.}
 }
 \value{
-A list containing intermediate quantities for basis function evaluation.
+A list of intermediate quantities used in SLGP evaluation:
+\itemize{
+\item \code{nodes}: grid of response × covariates,
+\item \code{indNodesToIntegral}: response bin indices,
+\item \code{indSamplesToNodes}: sample-to-node index mapping,
+\item \code{weightSamplesToNodes}: equal weights for NN interpolation.
+}
 }
 \description{
-This function takes normalized data, predictor names, response name,
-and computes intermediate quantities useful for later evaluation of basis functions.
+Computes intermediate quantities for evaluating SLGP basis functions using
+Nearest Neighbor (NN) interpolation over a regular grid in the normalized domain.
 }
 \examples{
-data <- data.frame(x1 = c(0.1, 0.5, 0.9), x2 = c(0.2, 0.6, 1.0), y = c(0.3, 0.7, 1.0))
-normalized_data <- normalize_data(data, c("x1", "x2"), "y")
-intermediate_quantities <- pre_comput_NN(normalized_data, c("x1", "x2"), "y")
-
+\dontrun{
+# Generate sample data
+df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
+# Normalize the data
+norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
+pre_computed_quantities <- pre_comput_NN(norm_df, c("x1", "x2"), "y")
 }
+}
+\keyword{internal}

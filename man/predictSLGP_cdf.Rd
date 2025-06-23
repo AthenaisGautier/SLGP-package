@@ -2,7 +2,7 @@
 % Please edit documentation in R/PredictAndSimulate.R
 \name{predictSLGP_cdf}
 \alias{predictSLGP_cdf}
-\title{Perform prediction at candidate points of the cdf(s) in a SLGP model.}
+\title{Predict cumulative distribution values at new locations using a SLGP model}
 \usage{
 predictSLGP_cdf(
   SLGPmodel,
@@ -13,19 +13,21 @@ predictSLGP_cdf(
 )
 }
 \arguments{
-\item{SLGPmodel}{An object of class SLGP.}
+\item{SLGPmodel}{An object of class \code{\link{SLGP-class}}.}
 
-\item{newNodes}{A data frame containing the new points at which we want the SLGP(s) evaluated}
+\item{newNodes}{A data frame with covariate values where the SLGP should be evaluated.}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").}
+\item{interpolateBasisFun}{Character string indicating the interpolation scheme for basis functions:
+one of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Number of integration points along the response axis.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Discretization resolution for interpolation (optional).}
 }
 \value{
-A list containing the results of the SLGP regression.
+A data frame with \code{newNodes} and predicted CDF values, columns named \code{cdf_1}, \code{cdf_2}, ...
 }
 \description{
-Perform prediction at candidate points of the cdf(s) in a SLGP model.
+Computes the posterior cumulative distribution function (CDF) values at specified
+covariate values using a fitted SLGP model.
 }

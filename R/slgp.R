@@ -1,35 +1,75 @@
-
-#' Perform SLGP estimation using method of choice.
+#' Define and can train a Spatial Logistic Gaussian Process (SLGP) model
 #'
-#' Creates a \code{slgp} object and performs the training using either a Bayesian MCMC estimation, a MAP estimation or a Laplace approximation (i.e. MAP + Laplace).
+#' This function builds and trains an SLGP model based on a specified formula and data.
+#' The SLGP is a finite-rank Gaussian process model for conditional density estimation,
+#' trained using MAP, MCMC, Laplace approximation, or left untrained ("none").
 #'
 #'
-#' @param formula A formula specifying the model.
-#' @param data A data frame containing the variables in the formula.
-#' @param epsilonStart An optional numeric vector, the starting weights in the finite-rank GP:
-#' \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }
-#' @param method The method to be used among {"none", "MCMC", "MAP", "Laplace"}.
-#' @param basisFunctionsUsed String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WNN").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
-#' @param hyperparams Optional hyper-parameter values. It should be a list with sigma and a vector for lengthscale.
-#' @param sigmaEstimationMethod Method for estimating sigma2 ("none" (default) or "heuristic").
-#' @param predictorsUpper An optional vector with the response upper range and lower range.
-#' @param predictorsLower An optional vector with the response upper range and lower range.
-#' @param responseRange An optional vector with the response upper range and lower range.
-#' @param opts_BasisFun List of extra parameters for the basis functions.
-#' @param BasisFunParam List to specify the basis functions
-#' @param opts Optional list of extra parameters, typically for the MCMC or optimisation.
 #'
-#' @return A list containing the results of the SLGP regression.
+#' @param formula A formula specifying the model structure, with the response on the left-hand side and covariates on the right.
+#' @param data A data frame containing the variables used in the formula.
+#' @param epsilonStart Optional numeric vector of initial weights for the finite-rank GP:
+#'   \eqn{Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t)}.
+#' @param method Character string specifying the training method: one of \{"none", "MCMC", "MAP", "Laplace"\}.
+#' @param basisFunctionsUsed Character string describing the basis function type:
+#'   one of "inducing points", "RFF", "Discrete FF", "filling FF", or "custom cosines".
+#' @param interpolateBasisFun Character string indicating how to evaluate basis functions:
+#'   "nothing" (exact eval), "NN" (nearest-neighbor), or "WNN" (weighted inverse-distance). Default is "NN".
+#' @param nDiscret Integer controlling the resolution of the interpolation grid (used only for "NN" or "WNN").
+#' @param nIntegral Number of quadrature points used for numerical integration over the response domain.
+#' @param hyperparams Optional list of hyperparameters. Should contain:
+#'   \itemize{
+#'     \item \code{sigma2}: signal variance
+#'     \item \code{lengthscale}: vector of lengthscales (one per covariate)
+#'   }
+#' @param sigmaEstimationMethod Method to heuristically estimate the variance \code{sigma2}.
+#'   Either "none" (default) or "heuristic".
+#' @param predictorsUpper Optional numeric vector for the upper bounds of the covariates (used for scaling).
+#' @param predictorsLower Optional numeric vector for the lower bounds of the covariates.
+#' @param responseRange Optional numeric vector of length 2 with the lower and upper bounds of the response.
+#' @param seed Optional integer for reproducibility.
+#' @param opts_BasisFun List of optional configuration parameters passed to the basis function initializer.
+#' @param BasisFunParam Optional list of precomputed basis function parameters.
+#' @param opts Optional list of extra settings passed to inference routines (e.g., \code{stan_iter}, \code{stan_chains}, \code{ndraws}).
+#'
+#' @return An object of S4 class \code{\link{SLGP-class}}, containing:
+#' \describe{
+#'   \item{coefficients}{Matrix of posterior (or prior) draws of the SLGP coefficients \eqn{\epsilon_i}.}
+#'   \item{hyperparams}{List of fitted or provided hyperparameters.}
+#'   \item{logPost}{Log-posterior (if MAP or Laplace used).}
+#'   \item{method}{Estimation method used.}
+#'   \item{...}{Other internal information such as ranges, basis settings, and data.}
+#' }
+#'
+#' @importFrom stats rnorm median
+#' @importFrom mvnfast rmvn
 #' @export
+#'
 #' @examples
 #' \dontrun{
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' # Set input and output ranges manually (you can also use range(Boston$age), etc.)
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#' # Train an SLGP model using MAP estimation and RFF basis
+#' modelMAP <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "MAP",    # Train using Maximum A Posteriori estimation
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2),  # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
 #' }
 #' @references
 #' Gautier, Athénaïs (2023). "Modelling and Predicting Distribution-Valued Fields with Applications to Inversion Under Uncertainty." Thesis, Universität Bern, Bern.
-#' [https://boristheses.unibe.ch/4377/]
+#' \url{https://boristheses.unibe.ch/4377/}
 #'
 slgp <- function(formula,
                  data,
@@ -146,7 +186,7 @@ slgp <- function(formula,
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
     if(file.exists("./data/composed_model.rds")){
-      stan_model <- readRDS(system.file("data", "composed_model.rds", package = "SLGP"))
+      stan_model <- readRDS(system.file("extdata", "composed_model.rds", package = "SLGP"))
     }else{
       stan_model_path <- system.file("stan", "likelihoodComposed.stan", package = "SLGP")
       # Load and compile the Stan model
@@ -170,8 +210,8 @@ slgp <- function(formula,
       mean_x = rep(0, ncol(functionValues))
     )
   }else{
-    if(file.exists("./data/simple_model.rds")){
-      stan_model <- readRDS(system.file("data", "simple_model.rds", package = "SLGP"))
+    if(file.exists("./inst/extdata/simple_model.rds")){
+      stan_model <- readRDS(system.file("extdata", "simple_model.rds", package = "SLGP"))
     }else{
       stan_model_path <- system.file("stan", "likelihoodSimple.stan", package = "SLGP")
       # Load and compile the Stan model
@@ -303,24 +343,52 @@ slgp <- function(formula,
               logPost=logPost))
 }
 
-#' Retrain a SLGP by changing the data and/or method.
+#' Retrain a fitted SLGP model with new data and/or estimation method
 #'
-#' Creates a \code{slgp} object and performs the training using either a Bayesian MCMC estimation, a MAP estimation or a Laplace approximation (i.e. MAP + Laplace).
+#' This function retrains an existing SLGP model using either a Bayesian MCMC estimation,
+#' a Maximum A Posteriori (MAP) estimation, or a Laplace approximation. The model can be retrained
+#' using new data, new inference settings, or updated hyperparameters. It reuses the structure and
+#' basis functions from the original model.
 #'
-#' @param SLGPmodel A SLGP.
-#' @param newdata An optional data frame containing the variables in the formula.
-#' @param epsilonStart An optional numeric vector, the starting weights in the finite-rank GP:
-#' \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }
-#' @param method The method to be used among {"MCMC", "MAP", "Laplace"}.
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
-#' @param hyperparams Optional hyper-parameter values. It should be a list with sigma and a vector for lengthscale.
-#' @param sigmaEstimationMethod Method for estimating sigma2 ("none" (default) or "heuristic").
-#' @param opts Optional list of extra parameters, typically for the MCMC or optimisation.
+#' @param SLGPmodel An object of class \code{\link{SLGP-class}} to be retrained.
+#' @param newdata Optional data frame containing new observations. If \code{NULL}, the original data is reused.
+#' @param epsilonStart Optional numeric vector with initial values for the coefficients \eqn{\epsilon}.
+#' @param method Character string specifying the estimation method: one of \{"MCMC", "MAP", "Laplace"\}.
+#' @param interpolateBasisFun Character string specifying how basis functions are evaluated:
+#'   \itemize{
+#'     \item \code{"nothing"} — evaluate directly at sample locations;
+#'     \item \code{"NN"} — interpolate using nearest neighbor;
+#'     \item \code{"WNN"} — interpolate using weighted nearest neighbors (default).
+#'   }
+#' @param nDiscret Integer specifying the discretization grid size (used only if interpolation is enabled).
+#' @param nIntegral Integer specifying the number of quadrature points used to approximate integrals over the response domain.
+#' @param hyperparams Optional list with updated hyperparameters. Must include:
+#'   \itemize{
+#'     \item \code{sigma2}: signal variance;
+#'     \item \code{lengthscale}: vector of lengthscales for the inputs.
+#'   }
+#' @param sigmaEstimationMethod Character string indicating how to estimate \code{sigma2}:
+#'   either \code{"none"} (default) or \code{"heuristic"}.
+#' @param seed Optional integer to set the random seed for reproducibility.
+#' @param opts Optional list of additional options passed to inference routines:
+#'   \code{stan_chains}, \code{stan_iter}, \code{ndraws}, etc.
 #'
-#' @return A list containing the results of the SLGP regression.
+#' @return An updated object of class \code{\link{SLGP-class}} with retrained coefficients and updated posterior information.
+#'
+#' @importFrom stats rnorm
+#' @importFrom mvnfast rmvn
+#'
 #' @export
+#'
+#' @references
+#' Gautier, A. (2023). *Modelling and Predicting Distribution-Valued Fields with Applications to Inversion Under Uncertainty*.
+#' PhD Thesis, Universität Bern. \url{https://boristheses.unibe.ch/4377/}
+#'
+#' @examples
+#' \dontrun{
+#' model_new <- retrainSLGP(modelMAP, newdata = new_data, method = "Laplace")
+#' }
+#'
 retrainSLGP <- function(SLGPmodel,
                         newdata=NULL,
                         epsilonStart =NULL,
@@ -392,8 +460,8 @@ retrainSLGP <- function(SLGPmodel,
 
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
-    if(file.exists("./data/composed_model.rds")){
-      stan_model <- readRDS(system.file("data", "composed_model.rds", package = "SLGP"))
+    if(file.exists("./inst/extdata/composed_model.rds")){
+      stan_model <- readRDS(system.file("./inst/extdata", "composed_model.rds", package = "SLGP"))
     }else{
       stan_model_path <- system.file("stan", "likelihoodComposed.stan", package = "SLGP")
       # Load and compile the Stan model
@@ -417,8 +485,8 @@ retrainSLGP <- function(SLGPmodel,
       mean_x = rep(0, ncol(functionValues))
     )
   }else{
-    if(file.exists("./data/simple_model.rds")){
-      stan_model <- readRDS(system.file("data", "simple_model.rds", package = "SLGP"))
+    if(file.exists("./inst/extdata/simple_model.rds")){
+      stan_model <- readRDS(system.file("./inst/extdata", "simple_model.rds", package = "SLGP"))
     }else{
       stan_model_path <- system.file("stan", "likelihoodSimple.stan", package = "SLGP")
       # Load and compile the Stan model

@@ -2,7 +2,7 @@
 % Please edit documentation in R/basisFunInitAndCompute.R
 \name{initialize_basisfun_fillingRFF}
 \alias{initialize_basisfun_fillingRFF}
-\title{Initialize parameters for basis functions based on space-filling Random Fourier Features.}
+\title{Initialize space-filling Random Fourier Features}
 \usage{
 initialize_basisfun_fillingRFF(
   dimension,
@@ -13,21 +13,20 @@ initialize_basisfun_fillingRFF(
 )
 }
 \arguments{
-\item{dimension}{Numeric. The dimension of the index
-\eqn{[\mathbf{x},\,t]}{[x, t]}.}
+\item{dimension}{Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.}
 
-\item{nFreq}{Numeric. Number of frequencies to sample.}
+\item{nFreq}{Integer. Number of frequency vectors to be considered.}
 
-\item{MatParam}{Numeric, specifying the parameter of the Matérn kernel considered (default = 5/2).}
+\item{MatParam}{Numeric. Matérn smoothness parameter (default = 5/2).}
 
-\item{lengthscale}{Numeric vector containing the lengthscales to use for the kernel.}
+\item{lengthscale}{Numeric vector. Lengthscales used for scaling the input space.}
+
+\item{seed}{Integer. Random seed.}
 }
 \value{
-List. A list containing the initialized parameters necessary for evaluating the specified basis function.
+List with frequency, offset, and coefficient parameters.
 }
 \description{
-This function initializes parameters for basis functions based on space-filling Random Fourier Features (for Matérn kernels only).
+Initializes RFF parameters with LHS-optimized frequency directions.
 }
-\examples{
-1+1
-}
+\keyword{internal}

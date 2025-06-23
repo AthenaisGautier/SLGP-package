@@ -2,24 +2,21 @@
 % Please edit documentation in R/basisFunInitAndCompute.R
 \name{initialize_basisfun_discreteFF}
 \alias{initialize_basisfun_discreteFF}
-\title{Initialize parameters for basis functions based on discrete Fourier Features.}
+\title{Initialize discrete Fourier features}
 \usage{
 initialize_basisfun_discreteFF(dimension, maxOrdert, maxOrderx)
 }
 \arguments{
-\item{dimension}{Numeric. The dimension of the index
-\eqn{[\mathbf{x},\,t]}{[x, t]}.}
+\item{dimension}{Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.}
 
-\item{maxOrdert}{Numeric. Maximum frequency in t.}
+\item{maxOrdert}{Integer. Maximum frequency in t.}
 
-\item{maxOrderx}{Numeric. Maximum frequency in x.}
+\item{maxOrderx}{Integer. Maximum frequency in each x.}
 }
 \value{
-List. A list containing the initialized parameters necessary for evaluating the specified basis function.
+List with frequency, offset, and coefficient parameters.
 }
 \description{
-This function initializes parameters for basis functions based on discrete Fourier Features.
+Generates basis using discrete cosine/sine terms for each input dimension.
 }
-\examples{
-1+1
-}
+\keyword{internal}

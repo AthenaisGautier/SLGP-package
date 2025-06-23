@@ -2,20 +2,21 @@
 % Please edit documentation in R/basisFunInitAndCompute.R
 \name{evaluate_basis_functions}
 \alias{evaluate_basis_functions}
-\title{Evaluate a Basis of Functions at Given Locations}
+\title{Evaluate basis functions at given locations.}
 \usage{
 evaluate_basis_functions(parameters, X, lengthscale)
 }
 \arguments{
-\item{parameters}{A list containing outputs of initialize_basisfun.}
+\item{parameters}{List of basis function parameters.}
 
-\item{X}{A design matrix containing locations where we want to evaluate the function.}
+\item{X}{Matrix or dataframe of evaluation locations.}
 
-\item{lengthscale}{Numeric vector containing the lengthscales to use for the kernel.}
+\item{lengthscale}{Numeric vector. Lengthscales used for scaling the input space.}
 }
 \value{
-A matrix with the evaluated basis functions.
+A matrix of basis function values.
 }
 \description{
-Evaluate a basis of functions at given locations.
+Evaluates all basis functions defined by a parameter list at new locations.
 }
+\keyword{internal}

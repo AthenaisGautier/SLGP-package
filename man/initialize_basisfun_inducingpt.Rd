@@ -2,7 +2,7 @@
 % Please edit documentation in R/basisFunInitAndCompute.R
 \name{initialize_basisfun_inducingpt}
 \alias{initialize_basisfun_inducingpt}
-\title{Initialize parameters for Inducing points based functions.}
+\title{Initialize parameters for inducing-point basis functions}
 \usage{
 initialize_basisfun_inducingpt(
   dimension,
@@ -13,23 +13,22 @@ initialize_basisfun_inducingpt(
 )
 }
 \arguments{
-\item{dimension}{Numeric. The dimension of the index
-\eqn{[\mathbf{x},\,t]}{[x, t]}.}
+\item{dimension}{Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.}
 
-\item{kernel}{Character, specifying the kernel to be consider among "Gaussian", "Exp", "Mat32" and "Mat52" (default "Mat52").}
+\item{kernel}{Character. Kernel type ("Exp", "Mat32", "Mat52", "Gaussian").}
 
-\item{lengthscale}{Numeric vector containing the lengthscales to use for the kernel.}
+\item{lengthscale}{Numeric vector. Lengthscales used for scaling the input space.}
 
-\item{pointscoord}{Optional matrix with the coordinates of the inducing points. If none is provided, we sample them uniformly in the unit hypercube.}
+\item{pointscoord}{Optional matrix of inducing point coordinates.
+If none is provided, we sample them uniformly in the unit hypercube.}
 
-\item{numberPoints}{Optional numerical value specifying the number of inducing points to sample (ignored if \code{pointscoord} is specified)}
+\item{numberPoints}{Integer. Number of inducing points
+(used if \code{pointscoord} is NULL).}
 }
 \value{
-List. A list containing the upper triangular factor of the Cholesky decomposition of the kernel matrix as well as its inverse.
+List with kernel square root and inverse root matrices, and scaled coordinates.
 }
 \description{
-This function initializes parameters for basis functions based on inducing points.
+Computes kernel matrix and its decompositions for use in inducing-point basis functions.
 }
-\examples{
-1+1
-}
+\keyword{internal}

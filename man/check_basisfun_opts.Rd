@@ -7,23 +7,20 @@
 check_basisfun_opts(basisFunctionsUsed, dimension, opts_BasisFun = list())
 }
 \arguments{
-\item{basisFunctionsUsed}{Character. The type of basis function to use.
-Possible values: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".}
+\item{basisFunctionsUsed}{Character. Type of basis function to use.
+One of: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".}
 
-\item{dimension}{Numeric. The dimension of the index
-\eqn{[\mathbf{x},\,t]}{[x, t]}.}
+\item{dimension}{Integer. The dimension of the input space (typically \eqn{[\mathbf{x}, t]}).}
 
 \item{opts_BasisFun}{List. Options specific to the chosen basis function.
-If the type is "custom cosines", the basis functions considered are: \eqn{ \text{coef} \cdot \cos(\text{freq}^\top [x, t] + \text{offset}) }
-and the user must provide three vectors: \code{opts_BasisFun$freq}, \code{opts_BasisFun$offset} and \code{opts_BasisFun$coef}.
 Users can refer to the documentation of specific basis function initialization functions
 (e.g., \code{\link{initialize_basisfun_inducingpt}}, \code{\link{initialize_basisfun_RFF}},
 \code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.}
 }
 \value{
-A list containing the initialized parameters necessary for evaluating the specified basis function.
+A completed list of options specific to the chosen basis function.
 }
 \description{
-This function checks the parameters specified type of basis function, and whether they are consistent.
-If some values are missing, it fills them with defaults.
+Checks and completes the parameter list for a given basis function type.
 }
+\keyword{internal}

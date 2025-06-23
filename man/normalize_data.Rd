@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanagement.R
 \name{normalize_data}
 \alias{normalize_data}
-\title{Normalize Data to the Range \link{0, 1}}
+\title{normalize_data: Normalize data to the range [0, 1]}
 \usage{
 normalize_data(
   data,
@@ -14,28 +14,32 @@ normalize_data(
 )
 }
 \arguments{
-\item{data}{A dataframe containing the dataset.}
+\item{data}{A data frame containing the dataset.}
 
-\item{predictorNames}{A character vector specifying the names of the predictor variables.}
+\item{predictorNames}{A character vector of covariate column names.}
 
-\item{responseName}{A character string specifying the name of the response variable.}
+\item{responseName}{A character string specifying the response variable name.}
 
-\item{predictorsUpper}{A numeric vector representing the upper range for the predictors (optional).}
+\item{predictorsUpper}{Optional numeric vector of upper bounds for covariates.}
 
-\item{predictorsLower}{A numeric vector representing the lower range for the predictors (optional).}
+\item{predictorsLower}{Optional numeric vector of lower bounds for covariates.}
 
-\item{responseRange}{A numeric vector representing the upper and lower range for the response (optional).}
+\item{responseRange}{Optional numeric vector of length 2 giving lower and upper bounds for the response.}
 }
 \value{
-A dataframe with the normalized values.
+A normalized data frame with the same column structure as \code{data}, with values scaled to \eqn{[0,1]}.
 }
 \description{
-This function takes a dataframe, a vector of predictor names, a response name, and optional range information,
-and normalizes the data to the range \link{0, 1}. If range information is not provided, the observed
-values in the data are used to determine the range.
+Scales the response and covariates of a dataset to the unit interval \eqn{[0,1]}.
+This normalization is required before applying SLGP methods. If range bounds are
+not provided, they are computed from the data.
 }
 \examples{
-data <- data.frame(x1 = c(1, 2, 3), x2 = c(4, 5, 6), y = c(10, 20, 30))
-normalized_data <- normalize_data(data, c("x1", "x2"), "y")
-
+\dontrun{
+# Generate sample data
+df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
+# Normalize the data
+norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
 }
+}
+\keyword{internal}

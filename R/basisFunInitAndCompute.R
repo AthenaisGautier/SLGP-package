@@ -1,26 +1,20 @@
-## ============================================================================
 #' Check basis function parameters
 #'
-#' This function checks the parameters specified type of basis function, and whether they are consistent.
-#' If some values are missing, it fills them with defaults.
+#' Checks and completes the parameter list for a given basis function type.
 #'
-#' @param basisFunctionsUsed Character. The type of basis function to use.
-#'   Possible values: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".
-#'
-#' @param dimension Numeric. The dimension of the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
-#'
+#' @param basisFunctionsUsed Character. Type of basis function to use.
+#'   One of: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".
+#' @param dimension Integer. The dimension of the input space (typically \eqn{[\mathbf{x}, t]}).
 #' @param opts_BasisFun List. Options specific to the chosen basis function.
-#' If the type is "custom cosines", the basis functions considered are: \eqn{ \text{coef} \cdot \cos(\text{freq}^\top [x, t] + \text{offset}) }
-#' and the user must provide three vectors: \code{opts_BasisFun$freq}, \code{opts_BasisFun$offset} and \code{opts_BasisFun$coef}.
 #' Users can refer to the documentation of specific basis function initialization functions
 #' (e.g., \code{\link{initialize_basisfun_inducingpt}}, \code{\link{initialize_basisfun_RFF}},
 #'  \code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.
 #'
-#' @return A list containing the initialized parameters necessary for evaluating the specified basis function.
+#' @return A completed list of options specific to the chosen basis function.
 #'
+#' @keywords internal
 #'
-#' @export
+#' @importFrom stats runif
 #'
 check_basisfun_opts <- function(basisFunctionsUsed,
                                 dimension,
@@ -51,7 +45,7 @@ check_basisfun_opts <- function(basisFunctionsUsed,
       opts_BasisFunClean$kernel <- opts_BasisFun$kernel
     }
     if(is.null(opts_BasisFun$pointscoord)){
-      opts_BasisFunClean$pointscoord <- matrix(runif(numberPoints*dimension), ncol=dimension)
+      opts_BasisFunClean$pointscoord <- matrix(runif(opts_BasisFun$numberPoints*dimension), ncol=dimension)
     }else{
       opts_BasisFunClean$pointscoord <- opts_BasisFun$pointscoord
     }
@@ -130,28 +124,27 @@ check_basisfun_opts <- function(basisFunctionsUsed,
   opts_BasisFunClean$lengthscale <- opts_BasisFun$lengthscale
   return(opts_BasisFunClean)
 }
-## ============================================================================
-#' Initialize basis functions parameters
+
+
+#' Initialize basis function parameters
 #'
-#' This function initializes the basis function's parameters based on the specified type of basis function.
+#' Initializes the parameter list needed for a basis function.
 #'
 #' @param basisFunctionsUsed Character. The type of basis function to use.
-#'   Possible values: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".
+#' One of: "inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines".
 #'
-#' @param dimension Numeric. The dimension of the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
-#'
+#' @param dimension Integer. Dimension of the input space \eqn{[\mathbf{x},\,t]}{[x, t]}.
+#' @param lengthscale Numeric vector. Lengthscales used for scaling the input space.
 #' @param opts_BasisFun List. Optional. Additional options specific to the chosen basis function.
 #' If the type is "custom cosines", the basis functions considered are \eqn{ coef\cos(freq^\top [x, t] + offset) }
 #' and the user must provide three vectors: \code{opts_BasisFun$freq}, \code{opts_BasisFun$offset} and \code{opts_BasisFun$coef}.
 #' Users can refer to the documentation of specific basis function initialization functions
 #' (e.g., \code{\link{initialize_basisfun_inducingpt}}, \code{\link{initialize_basisfun_RFF}},
 #' \code{\link{initialize_basisfun_fillingRFF}}, \code{\link{initialize_basisfun_discreteFF}}, etc.) for details on the available options.
-#'#'
-#' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
 #'
+#' @return A list of initialized basis function parameters.
 #'
-#' @export
+#' @keywords internal
 #'
 initialize_basisfun <- function(basisFunctionsUsed, dimension, lengthscale, opts_BasisFun=list()) {
   # Initialize parameters based on basisFunctionsUsed
@@ -205,30 +198,22 @@ initialize_basisfun <- function(basisFunctionsUsed, dimension, lengthscale, opts
   return(parameters)
 }
 
-## ============================================================================
-#' Initialize parameters for Inducing points based functions.
+#' Initialize parameters for inducing-point basis functions
 #'
-#' This function initializes parameters for basis functions based on inducing points.
+#' Computes kernel matrix and its decompositions for use in inducing-point basis functions.
 #'
-#' @param dimension Numeric. The dimension of the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
+#' @param dimension Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.
+#' @param kernel Character. Kernel type ("Exp", "Mat32", "Mat52", "Gaussian").
+#' @param lengthscale Numeric vector. Lengthscales used for scaling the input space.
+#' @param pointscoord Optional matrix of inducing point coordinates.
+#' If none is provided, we sample them uniformly in the unit hypercube.
+#' @param numberPoints Integer. Number of inducing points
+#' (used if `pointscoord` is NULL).
 #'
-#' @param kernel Character, specifying the kernel to be consider among "Gaussian", "Exp", "Mat32" and "Mat52" (default "Mat52").
+#' @return List with kernel square root and inverse root matrices, and scaled coordinates.
 #'
-#' @param lengthscale Numeric vector containing the lengthscales to use for the kernel.
+#' @keywords internal
 #'
-#' @param pointscoord Optional matrix with the coordinates of the inducing points. If none is provided, we sample them uniformly in the unit hypercube.
-#'
-#' @param numberPoints Optional numerical value specifying the number of inducing points to sample (ignored if \code{pointscoord} is specified)
-#'
-#'
-#' @return List. A list containing the upper triangular factor of the Cholesky decomposition of the kernel matrix as well as its inverse.
-#'
-#' @examples
-#' 1+1
-#' @export
-#'
-
 initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthscale, pointscoord = NULL, numberPoints =NULL){
 
   temp <- t(t(pointscoord)/lengthscale)
@@ -257,27 +242,21 @@ initialize_basisfun_inducingpt <- function(dimension, kernel = "Mat52", lengthsc
   return(list(sqrtInv_covMat=Kinvsqrt, sqrt_covMat=Ksqrt, lengthCoord=temp))
 }
 
-## ============================================================================
-#' Initialize parameters basis functions based on Random Fourier Features.
+
+#' Initialize parameters basis functions based on Random Fourier Features
 #'
-#' This function initializes parameters for basis functions based on Random Fourier Features (for Matérn kernels only).
+#' Draws parameters for standard RFF approximating a Matérn kernel.
+#'
+#' @param dimension Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.
+#' @param nFreq Integer. Number of frequency vectors to be considered.
+#' @param MatParam Numeric. Matérn smoothness parameter (default = 5/2).
+#' @param lengthscale Numeric vector. Lengthscales used for scaling the input space.
+#'
+#' @return List with frequency, offset, and coefficient parameters.
+#'
+#' @keywords internal
 #'
 #' @importFrom mvnfast rmvt
-#'
-#' @param dimension Numeric. The dimension of the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
-#'
-#' @param nFreq Numeric. Number of frequencies to sample.
-#'
-#' @param MatParam Numeric, specifying the parameter of the Matérn kernel considered (default = 5/2).
-#'
-#' @param lengthscale Numeric vector containing the lengthscales to use for the kernel.
-#'
-#' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
-#'
-#' @examples
-#' 1+1
-#' @export
 #'
 initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale) {
   # Check if basisFunctionsUsed is valid
@@ -297,28 +276,22 @@ initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscal
   return(list(freq=freq, offset=offset, coef=coef))
 }
 
-## ============================================================================
-#' Initialize parameters for basis functions based on space-filling Random Fourier Features.
+
+#' Initialize space-filling Random Fourier Features
 #'
-#' This function initializes parameters for basis functions based on space-filling Random Fourier Features (for Matérn kernels only).
+#' Initializes RFF parameters with LHS-optimized frequency directions.
 #'
-#' @importFrom DiceDesign lhsDesign
-#' @importFrom DiceDesign maximinSA_LHS
+#' @param dimension Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.
+#' @param nFreq Integer. Number of frequency vectors to be considered.
+#' @param MatParam Numeric. Matérn smoothness parameter (default = 5/2).
+#' @param lengthscale Numeric vector. Lengthscales used for scaling the input space.
+#' @param seed Integer. Random seed.
 #'
-#' @param dimension Numeric. The dimension of the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
+#' @return List with frequency, offset, and coefficient parameters.
 #'
-#' @param nFreq Numeric. Number of frequencies to sample.
+#' @keywords internal
 #'
-#' @param MatParam Numeric, specifying the parameter of the Matérn kernel considered (default = 5/2).
-#'
-#' @param lengthscale Numeric vector containing the lengthscales to use for the kernel.
-#'
-#' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
-#'
-#' @examples
-#' 1+1
-#' @export
+#' @importFrom DiceDesign lhsDesign maximinSA_LHS
 #'
 initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale, seed=0) {
   # Check if basisFunctionsUsed is valid
@@ -342,23 +315,18 @@ initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, len
   return(list(freq=freq, offset=offset, coef=coef))
 }
 
-## ============================================================================
-#' Initialize parameters for basis functions based on discrete Fourier Features.
+
+#' Initialize discrete Fourier features
 #'
-#' This function initializes parameters for basis functions based on discrete Fourier Features.
+#' Generates basis using discrete cosine/sine terms for each input dimension.
 #'
-#' @param dimension Numeric. The dimension of the index
-#' \eqn{[\mathbf{x},\,t]}{[x, t]}.
+#' @param dimension Integer. Input (\eqn{[\mathbf{x},\,t]}{[x, t]}) dimension.
+#' @param maxOrdert Integer. Maximum frequency in t.
+#' @param maxOrderx Integer. Maximum frequency in each x.
 #'
-#' @param maxOrdert Numeric. Maximum frequency in t.
+#' @return List with frequency, offset, and coefficient parameters.
 #'
-#' @param maxOrderx Numeric. Maximum frequency in x.
-#'
-#' @return List. A list containing the initialized parameters necessary for evaluating the specified basis function.
-#'
-#' @examples
-#' 1+1
-#' @export
+#' @keywords internal
 #'
 initialize_basisfun_discreteFF <- function(dimension, maxOrdert, maxOrderx) {
   dim_x <- dimension - 1
@@ -387,21 +355,18 @@ initialize_basisfun_discreteFF <- function(dimension, maxOrdert, maxOrderx) {
   return(list(freq=freq, offset=offset, coef=coef))
 }
 
-
-##' Evaluate a basis of functions at given locations.
-##'
-##' @title Evaluate a Basis of Functions at Given Locations
-##'
-##' @param parameters A list containing outputs of initialize_basisfun.
-##'
-##' @param X A design matrix containing locations where we want to evaluate the function.
-##'
-##' @param lengthscale Numeric vector containing the lengthscales to use for the kernel.
-##'
-##' @return A matrix with the evaluated basis functions.
-##'
-##' @export
-##'
+#' Evaluate basis functions at given locations.
+#'
+#' Evaluates all basis functions defined by a parameter list at new locations.
+#'
+#' @param parameters List of basis function parameters.
+#' @param X Matrix or dataframe of evaluation locations.
+#' @param lengthscale Numeric vector. Lengthscales used for scaling the input space.
+#'
+#' @return A matrix of basis function values.
+#'
+#' @keywords internal
+#'
 evaluate_basis_functions <- function(parameters, X, lengthscale) {
   type <- parameters$basisFunctionsUsed
   if(type=="inducing points"){

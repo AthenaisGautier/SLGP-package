@@ -2,7 +2,7 @@
 % Please edit documentation in R/slgp.R
 \name{retrainSLGP}
 \alias{retrainSLGP}
-\title{Retrain a SLGP by changing the data and/or method.}
+\title{Retrain a fitted SLGP model with new data and/or estimation method}
 \usage{
 retrainSLGP(
   SLGPmodel,
@@ -19,30 +19,55 @@ retrainSLGP(
 )
 }
 \arguments{
-\item{SLGPmodel}{A SLGP.}
+\item{SLGPmodel}{An object of class \code{\link{SLGP-class}} to be retrained.}
 
-\item{newdata}{An optional data frame containing the variables in the formula.}
+\item{newdata}{Optional data frame containing new observations. If \code{NULL}, the original data is reused.}
 
-\item{epsilonStart}{An optional numeric vector, the starting weights in the finite-rank GP:
-\eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }}
+\item{epsilonStart}{Optional numeric vector with initial values for the coefficients \eqn{\epsilon}.}
 
-\item{method}{The method to be used among {"MCMC", "MAP", "Laplace"}.}
+\item{method}{Character string specifying the estimation method: one of \{"MCMC", "MAP", "Laplace"\}.}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").}
+\item{interpolateBasisFun}{Character string specifying how basis functions are evaluated:
+\itemize{
+\item \code{"nothing"} — evaluate directly at sample locations;
+\item \code{"NN"} — interpolate using nearest neighbor;
+\item \code{"WNN"} — interpolate using weighted nearest neighbors (default).
+}}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Integer specifying the number of quadrature points used to approximate integrals over the response domain.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Integer specifying the discretization grid size (used only if interpolation is enabled).}
 
-\item{hyperparams}{Optional hyper-parameter values. It should be a list with sigma and a vector for lengthscale.}
+\item{hyperparams}{Optional list with updated hyperparameters. Must include:
+\itemize{
+\item \code{sigma2}: signal variance;
+\item \code{lengthscale}: vector of lengthscales for the inputs.
+}}
 
-\item{sigmaEstimationMethod}{Method for estimating sigma2 ("none" (default) or "heuristic").}
+\item{sigmaEstimationMethod}{Character string indicating how to estimate \code{sigma2}:
+either \code{"none"} (default) or \code{"heuristic"}.}
 
-\item{opts}{Optional list of extra parameters, typically for the MCMC or optimisation.}
+\item{seed}{Optional integer to set the random seed for reproducibility.}
+
+\item{opts}{Optional list of additional options passed to inference routines:
+\code{stan_chains}, \code{stan_iter}, \code{ndraws}, etc.}
 }
 \value{
-A list containing the results of the SLGP regression.
+An updated object of class \code{\link{SLGP-class}} with retrained coefficients and updated posterior information.
 }
 \description{
-Creates a \code{slgp} object and performs the training using either a Bayesian MCMC estimation, a MAP estimation or a Laplace approximation (i.e. MAP + Laplace).
+This function retrains an existing SLGP model using either a Bayesian MCMC estimation,
+a Maximum A Posteriori (MAP) estimation, or a Laplace approximation. The model can be retrained
+using new data, new inference settings, or updated hyperparameters. It reuses the structure and
+basis functions from the original model.
+}
+\examples{
+\dontrun{
+model_new <- retrainSLGP(modelMAP, newdata = new_data, method = "Laplace")
+}
+
+}
+\references{
+Gautier, A. (2023). \emph{Modelling and Predicting Distribution-Valued Fields with Applications to Inversion Under Uncertainty}.
+PhD Thesis, Universität Bern. \url{https://boristheses.unibe.ch/4377/}
 }

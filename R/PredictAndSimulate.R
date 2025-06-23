@@ -1,15 +1,19 @@
-#' Perform prediction at candidate points of a slgp model.
+#' Predict densities at new covariate locations using a given SLGP model
 #'
+#' Computes the posterior predictive probability densities at new covariate points
+#' using a fitted Spatial Logistic Gaussian Process (SLGP) model.
 #'
-#' @param SLGPmodel An object of class SLGP.
-#' @param newNodes A data frame containing the new points at which we want the SLGP(s) evaluated
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
+#' @param SLGPmodel An object of class \code{\link{SLGP-class}}.
+#' @param newNodes A data frame containing new covariate values at which to evaluate the SLGP.
+#' @param interpolateBasisFun Character string indicating how basis functions are evaluated:
+#'   one of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).
+#' @param nDiscret Integer specifying the discretization step for interpolation (only used if applicable).
+#' @param nIntegral Integer specifying the number of quadrature points over the response space.
 #'
-#' @return A list containing the results of the SLGP regression.
+#' @return A data frame combining \code{newNodes} with columns named \code{pdf_1}, \code{pdf_2}, ...,
+#' representing the posterior predictive density for each sample of the SLGP.
+#'
 #' @export
-#'
 predictSLGP_newNode <- function(SLGPmodel,
                                 newNodes,
                                 interpolateBasisFun = "WNN",
@@ -76,17 +80,22 @@ predictSLGP_newNode <- function(SLGPmodel,
   return(res)
 }
 
-#' Perform prediction at candidate points of the cdf(s) in a SLGP model.
+#' Predict cumulative distribution values at new locations using a SLGP model
 #'
+#' Computes the posterior cumulative distribution function (CDF) values at specified
+#' covariate values using a fitted SLGP model.
 #'
-#' @param SLGPmodel An object of class SLGP.
-#' @param newNodes A data frame containing the new points at which we want the SLGP(s) evaluated
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
+#' @param SLGPmodel An object of class \code{\link{SLGP-class}}.
+#' @param newNodes A data frame with covariate values where the SLGP should be evaluated.
+#' @param interpolateBasisFun Character string indicating the interpolation scheme for basis functions:
+#'   one of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).
+#' @param nDiscret Discretization resolution for interpolation (optional).
+#' @param nIntegral Number of integration points along the response axis.
 #'
-#' @return A list containing the results of the SLGP regression.
+#' @return A data frame with \code{newNodes} and predicted CDF values, columns named \code{cdf_1}, \code{cdf_2}, ...
+#'
 #' @export
+
 #'
 predictSLGP_cdf <- function(SLGPmodel,
                             newNodes,
@@ -158,20 +167,27 @@ predictSLGP_cdf <- function(SLGPmodel,
   return(res)
 }
 
-
-#' Perform prediction at candidate points of the quantile(s) in a SLGP model.
+#' Predict quantiles from a SLGP model at new locations
 #'
+#' Computes quantile values at specified levels (\code{probs}) for new covariate points,
+#' based on the posterior CDFs from a trained SLGP model.
 #'
-#' @param SLGPmodel An object of class SLGP.
-#' @param newNodes A data frame containing the new points at which we want the SLGP(s) evaluated
-#' @param probs Scalar or vector, specifying the quantile levels to be predicted.
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
+#' @param SLGPmodel An object of class \code{\link{SLGP-class}}.
+#' @param newNodes A data frame of covariate values.
+#' @param probs Numeric vector of quantile levels to compute (e.g., 0.1, 0.5, 0.9).
+#' @param interpolateBasisFun Character string specifying interpolation scheme: \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).
+#' @param nDiscret Discretization level of the response axis (for CDF inversion).
+#' @param nIntegral Number of integration points for computing the SLGP outputs.
 #'
-#' @return A list containing the results of the SLGP regression.
+#' @return A data frame with columns:
+#'   \itemize{
+#'     \item The covariates in \code{newNodes} (repeated per quantile level),
+#'     \item A column \code{probs} indicating the quantile level,
+#'     \item Columns \code{qSLGP_1}, \code{qSLGP_2}, ... for each posterior sample's quantile estimate.
+#'   }
+#'
+#' @importFrom stats approx
 #' @export
-#'
 predictSLGP_quantiles <- function(SLGPmodel,
                                   newNodes,
                                   probs,
@@ -181,7 +197,7 @@ predictSLGP_quantiles <- function(SLGPmodel,
   predictorNames <- SLGPmodel@covariateName
   responseName <-  SLGPmodel@responseName
 
-  u <- seq(range_response[1], range_response[2],, nDiscret)
+  u <- seq(SLGPmodel@responseRange[1], SLGPmodel@responseRange[2],, nDiscret)
   newNodesX <- newNodes[, predictorNames, drop=FALSE]
   newNodesPred <- expand.grid(u, seq(nrow(newNodesX)))
   IDpred <- newNodesPred[, 2]
@@ -256,31 +272,39 @@ predictSLGP_quantiles <- function(SLGPmodel,
   colnames(res) <- c(predictorNames, "probs", paste0("qSLGP_", seq(ncol(SLGPcvalues))))
   return(res)
 }
-#' Perform prediction at candidate points of the (un)centered moment(s) in a SLGP model.
+
+#' Predict centered or uncentered moments at new locations from a SLGP model
 #'
+#' Computes statistical moments (e.g., mean, variance, ...) of the posterior predictive
+#' distributions at new covariate locations, using a given SLGP model.
 #'
-#' @param SLGPmodel An object of class SLGP.
-#' @param newNodes A data frame containing the new points at which we want the SLGP(s) evaluated
-#' @param power Scalar or vector, specifying the moments to be predicted.
-#' @param centered Boolean, specifying if the moments to be predicted are centered (TRUE) or not (FALSE).
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
+#' @param SLGPmodel An object of class \code{\link{SLGP-class}}.
+#' @param newNodes A data frame of new covariate values.
+#' @param power Scalar or vector of positive integers indicating the moment orders to compute.
+#' @param centered Logical; if \code{TRUE}, computes centered moments. If \code{FALSE}, computes raw moments.
+#' @param interpolateBasisFun Interpolation mode for basis functions: \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).
+#' @param nDiscret Discretization resolution of the response space.
+#' @param nIntegral Number of integration points for computing densities.
 #'
-#' @return A list containing the results of the SLGP regression.
+#' @return A data frame with:
+#'   \itemize{
+#'     \item Repeated rows of the input covariates,
+#'     \item A column \code{power} indicating the moment order,
+#'     \item One or more columns \code{mSLGP_1}, \code{mSLGP_2}, ... for the estimated moments across posterior samples.
+#'   }
+#'
 #' @export
-#'
 predictSLGP_moments <- function(SLGPmodel,
-                                 newNodes,
-                                 power,
-                                 centered=FALSE,
-                                 interpolateBasisFun = "WNN",
-                                 nIntegral=101,
-                                 nDiscret=101) {
+                                newNodes,
+                                power,
+                                centered=FALSE,
+                                interpolateBasisFun = "WNN",
+                                nIntegral=101,
+                                nDiscret=101) {
   predictorNames <- SLGPmodel@covariateName
   responseName <-  SLGPmodel@responseName
 
-  u <- seq(range_response[1], range_response[2],, nDiscret)
+  u <- seq(SLGPmodel@responseRange[1], SLGPmodel@responseRange[2],, nDiscret)
   newNodesX <- newNodes[, predictorNames, drop=FALSE]
   newNodesPred <- expand.grid(u, seq(nrow(newNodesX)))
   IDpred <- newNodesPred[, 2]
@@ -365,17 +389,25 @@ predictSLGP_moments <- function(SLGPmodel,
   colnames(res) <- c(predictorNames, "power", paste0("mSLGP_", seq(ncol(SLGPvalues))))
   return(res)
 }
-#' Draw new samples from a SLGP model
+
+#' Draw posterior predictive samples from a SLGP model
 #'
+#' Samples from the predictive distributions modeled by a SLGP at new covariate inputs.
+#' This method uses inverse transform sampling on the estimated posterior CDFs.
 #'
-#' @param SLGPmodel An object of class SLGP.
-#' @param newX A data frame containing the new points at which we want draws from a SLGP
-#' @param n An integer, (or vector of integers with length matching the number of rows in newPredictors) specifying the number of samples to be drawn.
-#' @param interpolateBasisFun String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").
-#' @param nDiscret Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".
-#' @param nIntegral Number of points used to approximate the integral.
-#' @param seed Optional, to specify a seed
-#' @return A list containing the results of the SLGP regression.
+#' @param SLGPmodel A trained SLGP model object (\code{\link{SLGP-class}}).
+#' @param newX A data frame of new covariate values at which to draw samples.
+#' @param n Integer or integer vector specifying how many samples to draw at each input point.
+#' @param interpolateBasisFun Character string specifying interpolation scheme for basis evaluation.
+#'   One of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).
+#' @param nDiscret Integer; discretization step for the response axis.
+#' @param nIntegral Integer; number of quadrature points for density approximation.
+#' @param seed Optional integer to set a random seed for reproducibility.
+#'
+#' @return A data frame containing sampled responses from the SLGP model, with covariate columns from \code{newX}
+#' and one response column named after \code{SLGPmodel@responseName}.
+#'
+#' @importFrom stats runif approxfun
 #' @export
 sampleSLGP <- function(SLGPmodel,
                        newX,

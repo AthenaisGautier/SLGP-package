@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanagement.R
 \name{pre_comput_WNN}
 \alias{pre_comput_WNN}
-\title{Compute intermediate quantities for basis functions evaluation (when a weighted nearest neighbours interpolation is done)}
+\title{pre_comput_WNN: Precompute quantities for SLGP basis evaluation with weighted nearest-neighbors}
 \usage{
 pre_comput_WNN(
   normalizedData,
@@ -13,26 +13,36 @@ pre_comput_WNN(
 )
 }
 \arguments{
-\item{normalizedData}{A dataframe containing the normalized dataset.}
+\item{normalizedData}{Normalized data frame (\eqn{[0,1]}-scaled).}
 
-\item{predictorNames}{A character vector specifying the names of the predictor variables.}
+\item{predictorNames}{Character vector of covariate names.}
 
-\item{responseName}{A character string specifying the name of the response variable.}
+\item{responseName}{Name of the response variable.}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Number of quadrature points for response domain.}
 
-\item{nDiscret}{Number of points used to discretize the predictors' domain.}
+\item{nDiscret}{Number of discretization steps for covariates.}
 }
 \value{
-A list containing intermediate quantities for basis function evaluation.
+A list of intermediate quantities:
+\itemize{
+\item \code{nodes}: all evaluation points in response × covariates grid,
+\item \code{indNodesToIntegral}: indices to map nodes to response bins,
+\item \code{indSamplesToNodes}: index mapping from samples to grid nodes,
+\item \code{weightSamplesToNodes}: interpolation weights using inverse distance.
+}
 }
 \description{
-This function takes normalized data, predictor names, response name,
-and computes intermediate quantities useful for later evaluation of basis functions.
+Computes intermediate quantities for evaluating basis functions via
+weighted nearest-neighbor (WNN) interpolation on a discretized grid.
 }
 \examples{
-data <- data.frame(x1 = c(0.1, 0.5, 0.9), x2 = c(0.2, 0.6, 1.0), y = c(0.3, 0.7, 1.0))
-normalized_data <- normalize_data(data, c("x1", "x2"), "y")
-intermediate_quantities <- pre_comput_WNN(normalized_data, c("x1", "x2"), "y")
-
+\dontrun{
+# Generate sample data
+df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
+# Normalize the data
+norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
+pre_computed_quantities <- pre_comput_WNN(norm_df, c("x1", "x2"), "y")
 }
+}
+\keyword{internal}

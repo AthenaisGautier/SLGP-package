@@ -2,7 +2,7 @@
 % Please edit documentation in R/PredictAndSimulate.R
 \name{predictSLGP_moments}
 \alias{predictSLGP_moments}
-\title{Perform prediction at candidate points of the (un)centered moment(s) in a SLGP model.}
+\title{Predict centered or uncentered moments at new locations from a SLGP model}
 \usage{
 predictSLGP_moments(
   SLGPmodel,
@@ -15,23 +15,29 @@ predictSLGP_moments(
 )
 }
 \arguments{
-\item{SLGPmodel}{An object of class SLGP.}
+\item{SLGPmodel}{An object of class \code{\link{SLGP-class}}.}
 
-\item{newNodes}{A data frame containing the new points at which we want the SLGP(s) evaluated}
+\item{newNodes}{A data frame of new covariate values.}
 
-\item{power}{Scalar or vector, specifying the moments to be predicted.}
+\item{power}{Scalar or vector of positive integers indicating the moment orders to compute.}
 
-\item{centered}{Boolean, specifying if the moments to be predicted are centered (TRUE) or not (FALSE).}
+\item{centered}{Logical; if \code{TRUE}, computes centered moments. If \code{FALSE}, computes raw moments.}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").}
+\item{interpolateBasisFun}{Interpolation mode for basis functions: \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Number of integration points for computing densities.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Discretization resolution of the response space.}
 }
 \value{
-A list containing the results of the SLGP regression.
+A data frame with:
+\itemize{
+\item Repeated rows of the input covariates,
+\item A column \code{power} indicating the moment order,
+\item One or more columns \code{mSLGP_1}, \code{mSLGP_2}, ... for the estimated moments across posterior samples.
+}
 }
 \description{
-Perform prediction at candidate points of the (un)centered moment(s) in a SLGP model.
+Computes statistical moments (e.g., mean, variance, ...) of the posterior predictive
+distributions at new covariate locations, using a given SLGP model.
 }

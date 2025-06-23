@@ -2,7 +2,7 @@
 % Please edit documentation in R/slgp.R
 \name{slgp}
 \alias{slgp}
-\title{Perform SLGP estimation using method of choice.}
+\title{Define and can train a Spatial Logistic Gaussian Process (SLGP) model}
 \usage{
 slgp(
   formula,
@@ -25,50 +25,87 @@ slgp(
 )
 }
 \arguments{
-\item{formula}{A formula specifying the model.}
+\item{formula}{A formula specifying the model structure, with the response on the left-hand side and covariates on the right.}
 
-\item{data}{A data frame containing the variables in the formula.}
+\item{data}{A data frame containing the variables used in the formula.}
 
-\item{epsilonStart}{An optional numeric vector, the starting weights in the finite-rank GP:
-\eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }}
+\item{epsilonStart}{Optional numeric vector of initial weights for the finite-rank GP:
+\eqn{Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t)}.}
 
-\item{method}{The method to be used among {"none", "MCMC", "MAP", "Laplace"}.}
+\item{method}{Character string specifying the training method: one of \{"none", "MCMC", "MAP", "Laplace"\}.}
 
-\item{basisFunctionsUsed}{String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").}
+\item{basisFunctionsUsed}{Character string describing the basis function type:
+one of "inducing points", "RFF", "Discrete FF", "filling FF", or "custom cosines".}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WNN").}
+\item{interpolateBasisFun}{Character string indicating how to evaluate basis functions:
+"nothing" (exact eval), "NN" (nearest-neighbor), or "WNN" (weighted inverse-distance). Default is "NN".}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Number of quadrature points used for numerical integration over the response domain.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Integer controlling the resolution of the interpolation grid (used only for "NN" or "WNN").}
 
-\item{hyperparams}{Optional hyper-parameter values. It should be a list with sigma and a vector for lengthscale.}
+\item{hyperparams}{Optional list of hyperparameters. Should contain:
+\itemize{
+\item \code{sigma2}: signal variance
+\item \code{lengthscale}: vector of lengthscales (one per covariate)
+}}
 
-\item{predictorsUpper}{An optional vector with the response upper range and lower range.}
+\item{predictorsUpper}{Optional numeric vector for the upper bounds of the covariates (used for scaling).}
 
-\item{predictorsLower}{An optional vector with the response upper range and lower range.}
+\item{predictorsLower}{Optional numeric vector for the lower bounds of the covariates.}
 
-\item{responseRange}{An optional vector with the response upper range and lower range.}
+\item{responseRange}{Optional numeric vector of length 2 with the lower and upper bounds of the response.}
 
-\item{sigmaEstimationMethod}{Method for estimating sigma2 ("none" (default) or "heuristic").}
+\item{sigmaEstimationMethod}{Method to heuristically estimate the variance \code{sigma2}.
+Either "none" (default) or "heuristic".}
 
-\item{opts_BasisFun}{List of extra parameters for the basis functions.}
+\item{seed}{Optional integer for reproducibility.}
 
-\item{BasisFunParam}{List to specify the basis functions}
+\item{opts_BasisFun}{List of optional configuration parameters passed to the basis function initializer.}
 
-\item{opts}{Optional list of extra parameters, typically for the MCMC or optimisation.}
+\item{BasisFunParam}{Optional list of precomputed basis function parameters.}
+
+\item{opts}{Optional list of extra settings passed to inference routines (e.g., \code{stan_iter}, \code{stan_chains}, \code{ndraws}).}
 }
 \value{
-A list containing the results of the SLGP regression.
+An object of S4 class \code{\link{SLGP-class}}, containing:
+\describe{
+\item{coefficients}{Matrix of posterior (or prior) draws of the SLGP coefficients \eqn{\epsilon_i}.}
+\item{hyperparams}{List of fitted or provided hyperparameters.}
+\item{logPost}{Log-posterior (if MAP or Laplace used).}
+\item{method}{Estimation method used.}
+\item{...}{Other internal information such as ranges, basis settings, and data.}
+}
 }
 \description{
-Creates a \code{slgp} object and performs the training using either a Bayesian MCMC estimation, a MAP estimation or a Laplace approximation (i.e. MAP + Laplace).
+This function builds and trains an SLGP model based on a specified formula and data.
+The SLGP is a finite-rank Gaussian process model for conditional density estimation,
+trained using MAP, MCMC, Laplace approximation, or left untrained ("none").
 }
 \examples{
 \dontrun{
+# Load Boston housing dataset
+library(MASS)
+data("Boston")
+# Set input and output ranges manually (you can also use range(Boston$age), etc.)
+range_x <- c(0, 100)
+range_response <- c(0, 50)
+
+# Train an SLGP model using MAP estimation and RFF basis
+modelMAP <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+                 data = Boston,     # Use the original Boston housing data
+                 method = "MAP",    # Train using Maximum A Posteriori estimation
+                 basisFunctionsUsed = "RFF",         # Random Fourier Features
+                 sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+                 predictorsLower = range_x[1],         # Lower bound for 'age'
+                 predictorsUpper = range_x[2],         # Upper bound for 'age'
+                 responseRange = range_response,       # Range for 'medv'
+                 opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+                                      MatParam = 5/2),  # Matern 5/2 kernel
+                 seed = 1)                             # Reproducibility
 }
 }
 \references{
 Gautier, Athénaïs (2023). "Modelling and Predicting Distribution-Valued Fields with Applications to Inversion Under Uncertainty." Thesis, Universität Bern, Bern.
-\link{https://boristheses.unibe.ch/4377/}
+\url{https://boristheses.unibe.ch/4377/}
 }

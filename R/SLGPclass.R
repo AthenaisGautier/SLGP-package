@@ -1,36 +1,53 @@
-#' Spatial Logistic Gaussian Process Class
+#' The SLGP S4 Class: Spatial Logistic Gaussian Process Model
 #'
-#' @slot formula Formula specifying the covariates.
-#' @slot data A data frame containing the data to train the SLGP.
-#' @slot responseName A character, specifying the name of the response.
-#' @slot covariateName A character vector, specifying the names of the covariates
-#' @slot responseRange A vector with the response upper range and lower range.
-#' @slot predictorsRange A list containing the vector 'predictorsLower' specifying the covariate's lower range
-#' and the vector 'predictorsUpper' specifying the covariate's upper range
-#' @slot method The method used to train the SLGP among {"MCMC", "MAP", "Laplace", "none"}.
-#' @slot p Number of basis functions.
-#' @slot basisFunctionsUsed String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").
-#' @slot opts_BasisFun List of extra parameters for the basis functions.
-#' @slot coefficients Matrix of epsilon's values for the finite-rank GP:
-#' \eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }
-#' @slot hyperparams Hyper-parameter values.It should be a list with a numeric 'sigma' and a vector 'lengthscale'.
-#' @slot logPost log-posterior value returned by Stan (up to a constant), currently implemented only for MAP and Laplace estimations
+#' This S4 class represents a Spatial Logistic Gaussian Process (SLGP) model, designed for
+#' modeling conditional or spatially dependent probability distributions. It encapsulates all
+#' necessary components for training, sampling, and prediction, including the basis function
+#' setup, learned coefficients, and fitted hyperparameters.
+#'
+#' @aliases SLGP-class
+#'
+#' @slot formula A \code{formula} specifying the model structure and covariates.
+#' @slot data A \code{data.frame} containing the observations used to train the model.
+#' @slot responseName A \code{character} string specifying the name of the response variable.
+#' @slot covariateName A \code{character} vector specifying the names of the covariates.
+#' @slot responseRange A \code{numeric} vector of length 2 indicating the lower and upper bounds of the response.
+#' @slot predictorsRange A \code{list} containing:
+#'   - \code{predictorsLower}: lower bounds of the covariates;
+#'   - \code{predictorsUpper}: upper bounds of the covariates.
+#' @slot method A \code{character} string indicating the training method used: one of \{"MCMC", "MAP", "Laplace", "none"\}.
+#' @slot p An \code{integer} indicating the number of basis functions used.
+#' @slot basisFunctionsUsed A \code{character} string specifying the type of basis functions used:
+#'   "inducing points", "RFF", "Discrete FF", "filling FF", or "custom cosines".
+#' @slot opts_BasisFun A \code{list} of additional options used to configure the basis functions.
+#' @slot BasisFunParam A \code{list} containing the computed parameters of the basis functions,
+#'   e.g., Fourier frequencies or interpolation weights.
+#' @slot coefficients A \code{matrix} of coefficients for the finite-rank Gaussian process.
+#'   Each row corresponds to a realization of the latent field:
+#'   \eqn{ Z(x, t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }.
+#' @slot hyperparams A \code{list} of hyperparameters, including:
+#'   - \code{sigma}: numeric signal standard deviation;
+#'   - \code{lengthscale}: a vector of lengthscales for each input dimension.
+#' @slot logPost A \code{numeric} value representing the (unnormalized) log-posterior of the model.
+#'   Currently available only for MAP and Laplace-trained models.
 #'
 #' @export
-SLGP <- setClass("SLGP",
-                 slots = c(formula = "formula",
-                           data = "data.frame",
-                           responseName = "character",
-                           covariateName = "character",
-                           responseRange = "numeric",
-                           predictorsRange = "list",
-                           method = "character",
-                           p = "numeric",
-                           basisFunctionsUsed = "character",
-                           opts_BasisFun = "list",
-                           BasisFunParam = "list",
-                           coefficients = "matrix",
-                           hyperparams = "list",
-                           logPost = "numeric")
-
+SLGP <- setClass(
+  "SLGP",
+  slots = c(
+    formula = "formula",
+    data = "data.frame",
+    responseName = "character",
+    covariateName = "character",
+    responseRange = "numeric",
+    predictorsRange = "list",
+    method = "character",
+    p = "numeric",
+    basisFunctionsUsed = "character",
+    opts_BasisFun = "list",
+    BasisFunParam = "list",
+    coefficients = "matrix",
+    hyperparams = "list",
+    logPost = "numeric"
+  )
 )

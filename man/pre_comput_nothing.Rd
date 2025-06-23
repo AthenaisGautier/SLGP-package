@@ -2,7 +2,7 @@
 % Please edit documentation in R/datamanagement.R
 \name{pre_comput_nothing}
 \alias{pre_comput_nothing}
-\title{Compute intermediate quantities for basis functions evaluation (when no interpolation is done)}
+\title{pre_comput_nothing: Precompute quantities for SLGP basis evaluation without interpolation}
 \usage{
 pre_comput_nothing(
   normalizedData,
@@ -12,24 +12,35 @@ pre_comput_nothing(
 )
 }
 \arguments{
-\item{normalizedData}{A dataframe containing the normalized dataset.}
+\item{normalizedData}{A data frame with values already normalized to \eqn{[0,1]}.}
 
-\item{predictorNames}{A character vector specifying the names of the predictor variables.}
+\item{predictorNames}{Character vector of covariate column names.}
 
-\item{responseName}{A character string specifying the name of the response variable.}
+\item{responseName}{Name of the response variable.}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Integer, number of points used to discretize the response domain.}
 }
 \value{
-A list containing intermediate quantities for basis function evaluation.
+A list of intermediate quantities used in SLGP basis function computation:
+\itemize{
+\item \code{nodes}: all points where basis functions are evaluated,
+\item \code{indNodesToIntegral}: index mapping nodes to response bins,
+\item \code{indSamplesToNodes}: index mapping observations to nodes,
+\item \code{indSamplesToPredictor}: index mapping observations to unique predictors,
+\item \code{weightSamplesToNodes}: interpolation weights (equal to 1 here).
+}
 }
 \description{
-This function takes normalized data, predictor names, response name,
-and computes intermediate quantities useful for later evaluation of basis functions.
+Computes intermediate quantities for evaluating basis functions when no interpolation
+is used. Basis functions are evaluated at the exact covariate and response grid locations.
 }
 \examples{
-data <- data.frame(x1 = c(0.1, 0.5, 0.9), x2 = c(0.2, 0.6, 1.0), y = c(0.3, 0.7, 1.0))
-ndata <- normalize_data(data, c("x1", "x2"), "y")
-intermediate_quantities <- pre_comput_nothing(ndata, c("x1", "x2"), "y")
-
+\dontrun{
+# Generate sample data
+df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
+# Normalize the data
+norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
+pre_computed_quantities <- pre_comput_nothing(norm_df, c("x1", "x2"), "y")
 }
+}
+\keyword{internal}

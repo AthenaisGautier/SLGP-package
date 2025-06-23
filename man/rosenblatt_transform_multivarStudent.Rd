@@ -2,27 +2,27 @@
 % Please edit documentation in R/miscFunctions.R
 \name{rosenblatt_transform_multivarStudent}
 \alias{rosenblatt_transform_multivarStudent}
-\title{Auxiliary function: performs the Rosenblatt transform from the multivariate uniform distribution
-to the multivariate student distribution that is a Matérn's kernel spectral density}
+\title{Rosenblatt transform to multivariate Student distribution}
 \usage{
 rosenblatt_transform_multivarStudent(x, dimension, MatParam = 5/2)
 }
 \arguments{
-\item{x}{vector or matrix, the points to be transformed.}
+\item{x}{A matrix (or vector) of samples in [0, 1]^d to transform.}
 
-\item{dimension}{Integer. The dimension of the problem.}
+\item{dimension}{Integer. The dimension of the input space.}
 
-\item{MatParam}{Numeric, specifying the parameter of the Matérn kernel considered (default = 5/2).}
+\item{MatParam}{Numeric. The Matérn kernel smoothness parameter (default = 5/2).}
 }
 \value{
-The transformed coordinates of x.
+A matrix with transformed coordinates following a multivariate Student distribution.
 }
 \description{
-Auxiliary function: performs the Rosenblatt transform from the multivariate uniform distribution
-to the multivariate student distribution that is a Matérn's kernel spectral density
+Auxiliary function that maps uniform samples in [0, 1]^d to samples from the spectral density
+of a Matérn kernel (i.e., a multivariate Student distribution).
 }
 \examples{
-data <- matrix(c(0, 0, 0.1, 0.9, 0.5, 0.5, 0.1, 0.1), ncol=2, byrow=TRUE)
-rosenblatt_transform_multivarStudent(x=data, dimension = 2)
+data <- matrix(c(0, 0, 0.1, 0.9, 0.5, 0.5, 0.1, 0.1), ncol = 2, byrow = TRUE)
+rosenblatt_transform_multivarStudent(data, dimension = 2)
 
 }
+\keyword{internal}

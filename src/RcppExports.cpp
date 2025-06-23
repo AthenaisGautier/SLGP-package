@@ -11,24 +11,11 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// crossdist
-Rcpp::NumericMatrix crossdist(Rcpp::NumericMatrix x, Rcpp::NumericMatrix y);
-RcppExport SEXP _SLGP_crossdist(SEXP xSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type x(xSEXP);
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(crossdist(x, y));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 RcppExport SEXP _rcpp_module_boot_stan_fit4likelihoodComposed_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4likelihoodSimple_mod();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_SLGP_crossdist", (DL_FUNC) &_SLGP_crossdist, 2},
     {"_rcpp_module_boot_stan_fit4likelihoodComposed_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4likelihoodComposed_mod, 0},
     {"_rcpp_module_boot_stan_fit4likelihoodSimple_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4likelihoodSimple_mod, 0},
     {NULL, NULL, 0}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/PredictAndSimulate.R
 \name{predictSLGP_newNode}
 \alias{predictSLGP_newNode}
-\title{Perform prediction at candidate points of a slgp model.}
+\title{Predict densities at new covariate locations using a given SLGP model}
 \usage{
 predictSLGP_newNode(
   SLGPmodel,
@@ -13,19 +13,22 @@ predictSLGP_newNode(
 )
 }
 \arguments{
-\item{SLGPmodel}{An object of class SLGP.}
+\item{SLGPmodel}{An object of class \code{\link{SLGP-class}}.}
 
-\item{newNodes}{A data frame containing the new points at which we want the SLGP(s) evaluated}
+\item{newNodes}{A data frame containing new covariate values at which to evaluate the SLGP.}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").}
+\item{interpolateBasisFun}{Character string indicating how basis functions are evaluated:
+one of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Integer specifying the number of quadrature points over the response space.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Integer specifying the discretization step for interpolation (only used if applicable).}
 }
 \value{
-A list containing the results of the SLGP regression.
+A data frame combining \code{newNodes} with columns named \code{pdf_1}, \code{pdf_2}, ...,
+representing the posterior predictive density for each sample of the SLGP.
 }
 \description{
-Perform prediction at candidate points of a slgp model.
+Computes the posterior predictive probability densities at new covariate points
+using a fitted Spatial Logistic Gaussian Process (SLGP) model.
 }

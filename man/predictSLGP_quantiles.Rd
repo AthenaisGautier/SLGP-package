@@ -2,7 +2,7 @@
 % Please edit documentation in R/PredictAndSimulate.R
 \name{predictSLGP_quantiles}
 \alias{predictSLGP_quantiles}
-\title{Perform prediction at candidate points of the quantile(s) in a SLGP model.}
+\title{Predict quantiles from a SLGP model at new locations}
 \usage{
 predictSLGP_quantiles(
   SLGPmodel,
@@ -14,21 +14,27 @@ predictSLGP_quantiles(
 )
 }
 \arguments{
-\item{SLGPmodel}{An object of class SLGP.}
+\item{SLGPmodel}{An object of class \code{\link{SLGP-class}}.}
 
-\item{newNodes}{A data frame containing the new points at which we want the SLGP(s) evaluated}
+\item{newNodes}{A data frame of covariate values.}
 
-\item{probs}{Scalar or vector, specifying the quantile levels to be predicted.}
+\item{probs}{Numeric vector of quantile levels to compute (e.g., 0.1, 0.5, 0.9).}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").}
+\item{interpolateBasisFun}{Character string specifying interpolation scheme: \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Number of integration points for computing the SLGP outputs.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Discretization level of the response axis (for CDF inversion).}
 }
 \value{
-A list containing the results of the SLGP regression.
+A data frame with columns:
+\itemize{
+\item The covariates in \code{newNodes} (repeated per quantile level),
+\item A column \code{probs} indicating the quantile level,
+\item Columns \code{qSLGP_1}, \code{qSLGP_2}, ... for each posterior sample's quantile estimate.
+}
 }
 \description{
-Perform prediction at candidate points of the quantile(s) in a SLGP model.
+Computes quantile values at specified levels (\code{probs}) for new covariate points,
+based on the posterior CDFs from a trained SLGP model.
 }

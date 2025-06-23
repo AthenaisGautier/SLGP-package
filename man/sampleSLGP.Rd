@@ -2,7 +2,7 @@
 % Please edit documentation in R/PredictAndSimulate.R
 \name{sampleSLGP}
 \alias{sampleSLGP}
-\title{Draw new samples from a SLGP model}
+\title{Draw posterior predictive samples from a SLGP model}
 \usage{
 sampleSLGP(
   SLGPmodel,
@@ -15,23 +15,26 @@ sampleSLGP(
 )
 }
 \arguments{
-\item{SLGPmodel}{An object of class SLGP.}
+\item{SLGPmodel}{A trained SLGP model object (\code{\link{SLGP-class}}).}
 
-\item{newX}{A data frame containing the new points at which we want draws from a SLGP}
+\item{newX}{A data frame of new covariate values at which to draw samples.}
 
-\item{n}{An integer, (or vector of integers with length matching the number of rows in newPredictors) specifying the number of samples to be drawn.}
+\item{n}{Integer or integer vector specifying how many samples to draw at each input point.}
 
-\item{interpolateBasisFun}{String specifying whether the basis functions are evaluated on all points ("nothing"), on the closest neighbour of a regular grid ("NN" - default) or with a weighted inverse distance to the closest neighbours ("WID").}
+\item{interpolateBasisFun}{Character string specifying interpolation scheme for basis evaluation.
+One of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
 
-\item{nIntegral}{Number of points used to approximate the integral.}
+\item{nIntegral}{Integer; number of quadrature points for density approximation.}
 
-\item{nDiscret}{Integer, optional, discretization step used if "interpolateBasisFun" is "NN" or "WNN".}
+\item{nDiscret}{Integer; discretization step for the response axis.}
 
-\item{seed}{Optional, to specify a seed}
+\item{seed}{Optional integer to set a random seed for reproducibility.}
 }
 \value{
-A list containing the results of the SLGP regression.
+A data frame containing sampled responses from the SLGP model, with covariate columns from \code{newX}
+and one response column named after \code{SLGPmodel@responseName}.
 }
 \description{
-Draw new samples from a SLGP model
+Samples from the predictive distributions modeled by a SLGP at new covariate inputs.
+This method uses inverse transform sampling on the estimated posterior CDFs.
 }

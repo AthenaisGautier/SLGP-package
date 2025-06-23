@@ -6,7 +6,6 @@
 //' @param y Second matrix
 //' @return Euclidean distance between rows of \code{x} and \code{y}
 //' @export
-// [[Rcpp::export]]
 Rcpp::NumericMatrix crossdist(Rcpp::NumericMatrix x, Rcpp::NumericMatrix y) {
   int n1 = x.nrow(), n2 = y.nrow(), ncol = x.ncol(), i, j, k;
 

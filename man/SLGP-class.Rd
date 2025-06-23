@@ -4,39 +4,55 @@
 \name{SLGP-class}
 \alias{SLGP-class}
 \alias{SLGP}
-\title{Spatial Logistic Gaussian Process Class}
+\title{The SLGP S4 Class: Spatial Logistic Gaussian Process Model}
 \description{
-Spatial Logistic Gaussian Process Class
+This S4 class represents a Spatial Logistic Gaussian Process (SLGP) model, designed for
+modeling conditional or spatially dependent probability distributions. It encapsulates all
+necessary components for training, sampling, and prediction, including the basis function
+setup, learned coefficients, and fitted hyperparameters.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{formula}}{Formula specifying the covariates.}
+\item{\code{formula}}{A \code{formula} specifying the model structure and covariates.}
 
-\item{\code{data}}{A data frame containing the data to train the SLGP.}
+\item{\code{data}}{A \code{data.frame} containing the observations used to train the model.}
 
-\item{\code{responseName}}{A character, specifying the name of the response.}
+\item{\code{responseName}}{A \code{character} string specifying the name of the response variable.}
 
-\item{\code{covariateName}}{A character vector, specifying the names of the covariates}
+\item{\code{covariateName}}{A \code{character} vector specifying the names of the covariates.}
 
-\item{\code{responseRange}}{A vector with the response upper range and lower range.}
+\item{\code{responseRange}}{A \code{numeric} vector of length 2 indicating the lower and upper bounds of the response.}
 
-\item{\code{predictorsRange}}{A list containing the vector 'predictorsLower' specifying the covariate's lower range
-and the vector 'predictorsUpper' specifying the covariate's upper range}
+\item{\code{predictorsRange}}{A \code{list} containing:
+\itemize{
+\item \code{predictorsLower}: lower bounds of the covariates;
+\item \code{predictorsUpper}: upper bounds of the covariates.
+}}
 
-\item{\code{method}}{The method used to train the SLGP among {"MCMC", "MAP", "Laplace", "none"}.}
+\item{\code{method}}{A \code{character} string indicating the training method used: one of \{"MCMC", "MAP", "Laplace", "none"\}.}
 
-\item{\code{p}}{Number of basis functions.}
+\item{\code{p}}{An \code{integer} indicating the number of basis functions used.}
 
-\item{\code{basisFunctionsUsed}}{String specifying the basis functions ("inducing points", "RFF", "Discrete FF", "filling FF", "custom cosines").}
+\item{\code{basisFunctionsUsed}}{A \code{character} string specifying the type of basis functions used:
+"inducing points", "RFF", "Discrete FF", "filling FF", or "custom cosines".}
 
-\item{\code{opts_BasisFun}}{List of extra parameters for the basis functions.}
+\item{\code{opts_BasisFun}}{A \code{list} of additional options used to configure the basis functions.}
 
-\item{\code{coefficients}}{Matrix of epsilon's values for the finite-rank GP:
-\eqn{ Z(x,t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }}
+\item{\code{BasisFunParam}}{A \code{list} containing the computed parameters of the basis functions,
+e.g., Fourier frequencies or interpolation weights.}
 
-\item{\code{hyperparams}}{Hyper-parameter values.It should be a list with a numeric 'sigma' and a vector 'lengthscale'.}
+\item{\code{coefficients}}{A \code{matrix} of coefficients for the finite-rank Gaussian process.
+Each row corresponds to a realization of the latent field:
+\eqn{ Z(x, t) = \sum_{i=1}^p \epsilon_i f_i(x, t) }.}
 
-\item{\code{logPost}}{log-posterior value returned by Stan (up to a constant), currently implemented only for MAP and Laplace estimations}
+\item{\code{hyperparams}}{A \code{list} of hyperparameters, including:
+\itemize{
+\item \code{sigma}: numeric signal standard deviation;
+\item \code{lengthscale}: a vector of lengthscales for each input dimension.
+}}
+
+\item{\code{logPost}}{A \code{numeric} value representing the (unnormalized) log-posterior of the model.
+Currently available only for MAP and Laplace-trained models.}
 }}
 
