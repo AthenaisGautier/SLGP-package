@@ -1,3 +1,10 @@
 ^SLGP\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+^README\.html$
+^README_files$
+^SLGP\.pdf$
+^vignettes/references\.bib$
+^vignettes/figures\.R$
+^doc$
+^Meta$
