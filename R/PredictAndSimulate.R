@@ -13,6 +13,41 @@
 #' @return A data frame combining \code{newNodes} with columns named \code{pdf_1}, \code{pdf_2}, ...,
 #' representing the posterior predictive density for each sample of the SLGP.
 #'
+#' @examples
+#' \dontrun{
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' # Set input and output ranges manually (you can also use range(Boston$age), etc.)
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#'#' #Create a SLGP model but don't fit it
+#' modelPrior <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "none",    # No training
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#'
+#' #Let us make 3 draws from the prior
+#' nrep <- 3
+#' set.seed(8)
+#' p <- ncol(modelPrior@coefficients)
+#' modelPrior@coefficients <- matrix(rnorm(n=nrep*p), nrow=nrep)
+#'
+#' # Where to predict the field of pdfs ?
+#' dfGrid <- data.frame(expand.grid(seq(range_x[1], range_x[2], 5),
+#' seq(range_response[1], range_response[2],, 101)))
+#' colnames(dfGrid) <- c("age", "medv")
+#' predPrior <- predictSLGP_newNode(SLGPmodel=modelPrior,
+#'                                  newNodes = dfGrid)
+#' }
 #' @export
 predictSLGP_newNode <- function(SLGPmodel,
                                 newNodes,
@@ -94,8 +129,42 @@ predictSLGP_newNode <- function(SLGPmodel,
 #'
 #' @return A data frame with \code{newNodes} and predicted CDF values, columns named \code{cdf_1}, \code{cdf_2}, ...
 #'
+#' @examples
+#' \dontrun{
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' # Set input and output ranges manually (you can also use range(Boston$age), etc.)
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#'#' #Create a SLGP model but don't fit it
+#' modelPrior <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "none",    # No training
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#'
+#' #Let us make 3 draws from the prior
+#' nrep <- 3
+#' set.seed(8)
+#' p <- ncol(modelPrior@coefficients)
+#' modelPrior@coefficients <- matrix(rnorm(n=nrep*p), nrow=nrep)
+#'
+#' # Where to predict the field of pdfs ?
+#' dfGrid <- data.frame(expand.grid(seq(range_x[1], range_x[2], 5),
+#' seq(range_response[1], range_response[2],, 101)))
+#' colnames(dfGrid) <- c("age", "medv")
+#' predPriorcdf <- predictSLGP_cdf(SLGPmodel=modelPrior,
+#'                                 newNodes = dfGrid)
+#' }
 #' @export
-
 #'
 predictSLGP_cdf <- function(SLGPmodel,
                             newNodes,
@@ -185,6 +254,35 @@ predictSLGP_cdf <- function(SLGPmodel,
 #'     \item A column \code{probs} indicating the quantile level,
 #'     \item Columns \code{qSLGP_1}, \code{qSLGP_2}, ... for each posterior sample's quantile estimate.
 #'   }
+#'
+#' @examples
+#' \dontrun{
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' # Set input and output ranges manually (you can also use range(Boston$age), etc.)
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#' # Train an SLGP model using Laplace estimation and RFF basis
+#' modelLaplace <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "Laplace",    # Train using Maximum A Posteriori estimation
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#' dfX <- data.frame(age=seq(range_x[1], range_x[2], 1))
+#' # Predict some quantiles, for instance here the first quartile, median, third quartile
+#' predQuartiles <- predictSLGP_quantiles(SLGPmodel= modelLaplace,
+#'                                        newNodes = dfX,
+#'                                        probs=c(0.25, 0.50, 0.75))
+#'
+#' }
 #'
 #' @importFrom stats approx
 #' @export
@@ -293,6 +391,37 @@ predictSLGP_quantiles <- function(SLGPmodel,
 #'     \item One or more columns \code{mSLGP_1}, \code{mSLGP_2}, ... for the estimated moments across posterior samples.
 #'   }
 #'
+#' @examples
+#' \dontrun{
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' # Set input and output ranges manually (you can also use range(Boston$age), etc.)
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#' # Train an SLGP model using Laplace estimation and RFF basis
+#' modelLaplace <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "Laplace",    # Train using Maximum A Posteriori estimation
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#' dfX <- data.frame(age=seq(range_x[1], range_x[2], 1))
+#' predMean <- predictSLGP_moments(SLGPmodel=modelLaplace,
+#'                                 newNodes = dfX,
+#'                                 power=c(1, 2),
+#'                                 centered=FALSE) # Uncentered moments of order 1 and 2
+#' predVar <- predictSLGP_moments(SLGPmodel=modelLaplace,
+#'                                newNodes = dfX,
+#'                                power=c(2),
+#'                                centered=TRUE) # Centered moments of order 2 (Variance)
+#' }
 #' @export
 predictSLGP_moments <- function(SLGPmodel,
                                 newNodes,
@@ -407,6 +536,35 @@ predictSLGP_moments <- function(SLGPmodel,
 #' @return A data frame containing sampled responses from the SLGP model, with covariate columns from \code{newX}
 #' and one response column named after \code{SLGPmodel@responseName}.
 #'
+#' @examples
+#' \dontrun{
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' # Set input and output ranges manually (you can also use range(Boston$age), etc.)
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#' # Train an SLGP model using Laplace estimation and RFF basis
+#' modelMAP <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "MAP",    # Train using Maximum A Posteriori estimation
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#'
+#' # Let's draw new sample points from the SLGP
+#'
+#' newDataPoints <- sampleSLGP(modelMAP,
+#'                             newX = data.frame(age=c(0, 25, 95)),
+#'                             n = c(10, 1000, 1), # how many samples to draw at each new x
+#'                             interpolateBasisFun = "WNN")
+#' }
 #' @importFrom stats runif approxfun
 #' @export
 sampleSLGP <- function(SLGPmodel,

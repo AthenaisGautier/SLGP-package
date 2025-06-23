@@ -32,3 +32,39 @@ representing the posterior predictive density for each sample of the SLGP.
 Computes the posterior predictive probability densities at new covariate points
 using a fitted Spatial Logistic Gaussian Process (SLGP) model.
 }
+\examples{
+\dontrun{
+# Load Boston housing dataset
+library(MASS)
+data("Boston")
+# Set input and output ranges manually (you can also use range(Boston$age), etc.)
+range_x <- c(0, 100)
+range_response <- c(0, 50)
+
+#' #Create a SLGP model but don't fit it
+modelPrior <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+                 data = Boston,     # Use the original Boston housing data
+                 method = "none",    # No training
+                 basisFunctionsUsed = "RFF",         # Random Fourier Features
+                 sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+                 predictorsLower = range_x[1],         # Lower bound for 'age'
+                 predictorsUpper = range_x[2],         # Upper bound for 'age'
+                 responseRange = range_response,       # Range for 'medv'
+                 opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+                                      MatParam = 5/2), # Matern 5/2 kernel
+                 seed = 1)                             # Reproducibility
+
+#Let us make 3 draws from the prior
+nrep <- 3
+set.seed(8)
+p <- ncol(modelPrior@coefficients)
+modelPrior@coefficients <- matrix(rnorm(n=nrep*p), nrow=nrep)
+
+# Where to predict the field of pdfs ?
+dfGrid <- data.frame(expand.grid(seq(range_x[1], range_x[2], 5),
+seq(range_response[1], range_response[2],, 101)))
+colnames(dfGrid) <- c("age", "medv")
+predPrior <- predictSLGP_newNode(SLGPmodel=modelPrior,
+                                 newNodes = dfGrid)
+}
+}

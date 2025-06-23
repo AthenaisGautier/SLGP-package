@@ -38,3 +38,33 @@ and one response column named after \code{SLGPmodel@responseName}.
 Samples from the predictive distributions modeled by a SLGP at new covariate inputs.
 This method uses inverse transform sampling on the estimated posterior CDFs.
 }
+\examples{
+\dontrun{
+# Load Boston housing dataset
+library(MASS)
+data("Boston")
+# Set input and output ranges manually (you can also use range(Boston$age), etc.)
+range_x <- c(0, 100)
+range_response <- c(0, 50)
+
+# Train an SLGP model using Laplace estimation and RFF basis
+modelMAP <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+                 data = Boston,     # Use the original Boston housing data
+                 method = "MAP",    # Train using Maximum A Posteriori estimation
+                 basisFunctionsUsed = "RFF",         # Random Fourier Features
+                 sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+                 predictorsLower = range_x[1],         # Lower bound for 'age'
+                 predictorsUpper = range_x[2],         # Upper bound for 'age'
+                 responseRange = range_response,       # Range for 'medv'
+                 opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+                                      MatParam = 5/2), # Matern 5/2 kernel
+                 seed = 1)                             # Reproducibility
+
+# Let's draw new sample points from the SLGP
+
+newDataPoints <- sampleSLGP(modelMAP,
+                            newX = data.frame(age=c(0, 25, 95)),
+                            n = c(10, 1000, 1), # how many samples to draw at each new x
+                            interpolateBasisFun = "WNN")
+}
+}

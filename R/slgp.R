@@ -54,6 +54,19 @@
 #' range_x <- c(0, 100)
 #' range_response <- c(0, 50)
 #'
+#'#' #Create a SLGP model but don't fit it
+#' modelPrior <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "none",    # No training
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#'
 #' # Train an SLGP model using MAP estimation and RFF basis
 #' modelMAP <- slgp(medv ~ age,        # Use a formula to specify response and covariates
 #'                  data = Boston,     # Use the original Boston housing data
@@ -386,7 +399,28 @@ slgp <- function(formula,
 #'
 #' @examples
 #' \dontrun{
-#' model_new <- retrainSLGP(modelMAP, newdata = new_data, method = "Laplace")
+#' # Load Boston housing dataset
+#' library(MASS)
+#' data("Boston")
+#' range_x <- c(0, 100)
+#' range_response <- c(0, 50)
+#'
+#' #Create a SLGP model but don't fit it
+#' modelPrior <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+#'                  data = Boston,     # Use the original Boston housing data
+#'                  method = "none",    # No training
+#'                  basisFunctionsUsed = "RFF",         # Random Fourier Features
+#'                  sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+#'                  predictorsLower = range_x[1],         # Lower bound for 'age'
+#'                  predictorsUpper = range_x[2],         # Upper bound for 'age'
+#'                  responseRange = range_response,       # Range for 'medv'
+#'                  opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+#'                                       MatParam = 5/2), # Matern 5/2 kernel
+#'                  seed = 1)                             # Reproducibility
+#' #Retrain using the Boston Housing dataset and a Laplace approximation scheme
+#' modelLaplace <- retrainSLGP(SLGPmodel=modelPrior,
+#'                             newdata = Boston,
+#'                             method="Laplace")
 #' }
 #'
 retrainSLGP <- function(SLGPmodel,

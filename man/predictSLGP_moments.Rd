@@ -41,3 +41,35 @@ A data frame with:
 Computes statistical moments (e.g., mean, variance, ...) of the posterior predictive
 distributions at new covariate locations, using a given SLGP model.
 }
+\examples{
+\dontrun{
+# Load Boston housing dataset
+library(MASS)
+data("Boston")
+# Set input and output ranges manually (you can also use range(Boston$age), etc.)
+range_x <- c(0, 100)
+range_response <- c(0, 50)
+
+# Train an SLGP model using Laplace estimation and RFF basis
+modelLaplace <- slgp(medv ~ age,        # Use a formula to specify response and covariates
+                 data = Boston,     # Use the original Boston housing data
+                 method = "Laplace",    # Train using Maximum A Posteriori estimation
+                 basisFunctionsUsed = "RFF",         # Random Fourier Features
+                 sigmaEstimationMethod = "heuristic",  # Auto-tune sigma2 (more stable)
+                 predictorsLower = range_x[1],         # Lower bound for 'age'
+                 predictorsUpper = range_x[2],         # Upper bound for 'age'
+                 responseRange = range_response,       # Range for 'medv'
+                 opts_BasisFun = list(nFreq = 200,     # Use 200 Fourier features
+                                      MatParam = 5/2), # Matern 5/2 kernel
+                 seed = 1)                             # Reproducibility
+dfX <- data.frame(age=seq(range_x[1], range_x[2], 1))
+predMean <- predictSLGP_moments(SLGPmodel=modelLaplace,
+                                newNodes = dfX,
+                                power=c(1, 2),
+                                centered=FALSE) # Uncentered moments of order 1 and 2
+predVar <- predictSLGP_moments(SLGPmodel=modelLaplace,
+                               newNodes = dfX,
+                               power=c(2),
+                               centered=TRUE) # Centered moments of order 2 (Variance)
+}
+}
