@@ -198,7 +198,7 @@ slgp <- function(formula,
   }
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
-    if(file.exists("./data/composed_model.rds")){
+    if(file.exists("./inst/extdata/composed_model.rds")){
       stan_model <- readRDS(system.file("extdata", "composed_model.rds", package = "SLGP"))
     }else{
       stan_model_path <- system.file("stan", "likelihoodComposed.stan", package = "SLGP")
@@ -223,6 +223,7 @@ slgp <- function(formula,
       mean_x = rep(0, ncol(functionValues))
     )
   }else{
+
     if(file.exists("./inst/extdata/simple_model.rds")){
       stan_model <- readRDS(system.file("extdata", "simple_model.rds", package = "SLGP"))
     }else{
@@ -494,12 +495,15 @@ retrainSLGP <- function(SLGPmodel,
 
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
-    if(file.exists("./inst/extdata/composed_model.rds")){
-      stan_model <- readRDS(system.file("./inst/extdata", "composed_model.rds", package = "SLGP"))
-    }else{
+    file_path <- system.file("extdata", "composed_model.rds", package = "SLGP")
+    if(file_path==""){
+      # print("./inst/extdata/composed_model.rds does not exist")
       stan_model_path <- system.file("stan", "likelihoodComposed.stan", package = "SLGP")
       # Load and compile the Stan model
       stan_model <- rstan::stan_model(stan_model_path, model_name = "SLGP_Likelihood_composed")
+    }else{
+      # print("./inst/extdata/composed_model.rds exists")
+      stan_model <- readRDS(file_path)
     }
     temp <- intermediateQuantities$indSamplesToNodes
     temp[is.na(temp)]<- 1
@@ -519,12 +523,15 @@ retrainSLGP <- function(SLGPmodel,
       mean_x = rep(0, ncol(functionValues))
     )
   }else{
-    if(file.exists("./inst/extdata/simple_model.rds")){
-      stan_model <- readRDS(system.file("./inst/extdata", "simple_model.rds", package = "SLGP"))
-    }else{
+    file_path <- system.file("extdata", "simple_model.rds", package = "SLGP")
+    if(file_path==""){
+      # print("./inst/extdata/simple_model.rds does not exist")
       stan_model_path <- system.file("stan", "likelihoodSimple.stan", package = "SLGP")
       # Load and compile the Stan model
       stan_model <- rstan::stan_model(stan_model_path, model_name = "SLGP_Likelihood_simple")
+    }else{
+      # print("./inst/extdata/simple_model.rds exists")
+      stan_model <- readRDS(file_path)
     }
     if(interpolateBasisFun=="nothing"){
       stan_data <- list(
