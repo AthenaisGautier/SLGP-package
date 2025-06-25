@@ -10,7 +10,7 @@ Authors@R:
 Maintainer: Athénaïs Gautier <athenais.gautier@onera.fr>
 Description: Spatial Logistic Gaussian Process for field density
     estimation with emphasis on Bayesian spectral methods.   
-License: GPL (>= 3)  + file LICENSE
+License: GPL (>= 3) 
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
