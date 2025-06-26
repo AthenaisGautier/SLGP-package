@@ -88,7 +88,7 @@ library(SLGP)
 modelPrior <- slgp(medv~age, # Use a formula to specify predictors VS response
                    # Can use medv~. for all variables,
                    # Or medv ~ age + var2 + var3 for more variables
-                   data=df,
+                   data=df[1, ],
                    method="none",
                    basisFunctionsUsed = "RFF",
                    interpolateBasisFun="WNN", # Accelerate inference
@@ -101,7 +101,7 @@ modelPrior <- slgp(medv~age, # Use a formula to specify predictors VS response
                    predictorsLower= c(range_x[1]),
                    predictorsUpper= c(range_x[2]),
                    responseRange= range_response,
-                   opts_BasisFun = list(nFreq=200,
+                   opts_BasisFun = list(nFreq=150,
                                         MatParam=5/2),
                    seed=1)
 ```
@@ -229,7 +229,7 @@ modelMAP <- slgp(medv~age, # Use a formula to specify predictors VS response
                  predictorsLower= c(range_x[1]),
                  predictorsUpper= c(range_x[2]),
                  responseRange= range_response,
-                 opts_BasisFun = list(nFreq=200,
+                 opts_BasisFun = list(nFreq=150,
                                       MatParam=5/2),
                  seed=1)
 ```
@@ -338,7 +338,7 @@ ggplot()  +
 By integrating the MAP approach with Laplace approximation, we refine our estimation strategy by approximating the posterior distribution with a multivariate Gaussian. This method strikes a balance between the full Bayesian inference of MCMC and the computational efficiency of MAP estimation. By leveraging both the gradient and Hessian of the posterior, it captures essential curvature information, providing a more informed approximation of the posterior landscape.
 
 ```{r SLGPfitting2}
-modelLaplace <- retrainSLGP(SLGPmodel=modelMAP, 
+modelLaplace <- retrainSLGP(SLGPmodel=modelPrior, 
                             newdata = df, 
                             method="Laplace")
 ```
@@ -439,7 +439,7 @@ Importantly, when using probabilistic inference schemes like Laplace approximati
 
 
 ```{r SLGPMCMCplotMoments, fig.cap = "Simultaneous prediction of the fields moments (and associated uncertainty) using a SLGP model", fig.fullwidth=TRUE, fig.height=4, fig.width=10, fig.align='center',fig.pos="H"}
-dfX <- data.frame(age=seq(range_x[1], range_x[2], 1))
+dfX <- data.frame(age=seq(range_x[1], range_x[2], 2))
 
 predMean <- predictSLGP_moments(SLGPmodel=modelLaplace,
                                 newNodes = dfX, 
@@ -495,17 +495,28 @@ We also support the joint prediction of quantiles at arbitrary levels. Because q
 
 ```{r SLGPMCMCplotQuantiles, fig.cap = "Simultaneous quantile prediction using a SLGP model, with estimation performed by MAP", fig.fullwidth=TRUE, fig.height=5, fig.width=10, fig.align='center',fig.pos="H"}
 probsL <- c(5, 25, 50, 75, 95)/100
-dfX <- data.frame(age=seq(range_x[1], range_x[2], 1))
+dfX <- data.frame(age=seq(range_x[1], range_x[2], 2))
 pred <- predictSLGP_quantiles(SLGPmodel=modelLaplace,
                               newNodes = dfX, 
                               probs=probsL)
 
-pred$probs <- factor(paste0("Quantile: ", 100*pred$probs, "%"),
-                     levels=paste0("Quantile: ", 100*probsL, "%"))
+df_plot <- pred %>%
+  pivot_longer(-c("age", "probs"))%>%
+  group_by(age, probs)%>%
+  summarise(q10 = quantile(value, probs=c(0.1)),
+            q50 = quantile(value, probs=c(0.5)),
+            q90 = quantile(value, probs=c(0.9)),
+            mean = mean(value), .groups="keep")%>%
+  ungroup()%>%
+  mutate(probs=factor(paste0("Quantile: ", 100*probs, "%"),
+                      levels=paste0("Quantile: ", 100*probsL, "%")))
 
 
-plot1 <-  ggplot(pred, mapping=aes(x = age)) +
-  geom_line(mapping=aes(y=qSLGP_1, lty="SLGP", 
+plot1 <- ggplot(df_plot, mapping=aes(x = age)) +
+  geom_ribbon(mapping = aes(ymin=q10, ymax=q90, 
+                            col=probs, fill=probs, group=probs),
+              alpha = 0.25, lty=3)+
+  geom_line(mapping=aes(y=q50, lty="SLGP", 
                         col=probs,group=probs), lwd=0.75)+
   labs(x = "Proportion of owner-occupied units built prior to 1940 [AGE, %]", 
        y = "Median value of owner-occupied homes [MEDV, k$]",
@@ -523,6 +534,7 @@ plot2 <- ggplot(df, mapping=aes(x=age))+
   theme_minimal()+
   labs(x = NULL, 
        y = "Sample count") 
+
 library(ggpubr)
 p_with_marginal <- ggarrange(
   plot2, plot1,

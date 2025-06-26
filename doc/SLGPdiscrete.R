@@ -107,7 +107,7 @@ modelMAP <- slgp(rad~dis+medv, # Use a formula with two indexing variables
                  predictorsLower= c(range_x[,1]),
                  predictorsUpper= c(range_x[,2]),
                  responseRange= range_response,
-                 opts_BasisFun = list(nFreq=200,
+                 opts_BasisFun = list(nFreq=150,
                                       MatParam=5/2))
 
 ## ----SLGPplotting1, fig.cap = "Figure 2: Predictive probabilities of rad at medv and dis, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"----
@@ -151,22 +151,9 @@ ggplot() +
 library(SLGP)
 df2 <- rbind(df, df, df, df, df, 
              df, df, df, df, df)
-modelMAP2 <- slgp(rad~dis+medv, # Use a formula with two indexing variables
-                  data=df2,
-                  method="MAP", #Maximum a posteriori estimation scheme
-                  basisFunctionsUsed = "RFF",
-                  interpolateBasisFun="WNN", # Accelerate inference
-                  hyperparams = list(lengthscale=c(0.15, 0.15, 0.15), 
-                                     # Applied to normalised data
-                                     # So 0.15 is 15% of the range of values
-                                     sigma2=1), 
-                  nIntegral = 9, #or length(seq(seq(range_response[1], range_response[2])))
-                  sigmaEstimationMethod = "heuristic", # Set to heuristic for numerical stability                 
-                  predictorsLower= c(range_x[,1]),
-                  predictorsUpper= c(range_x[,2]),
-                  responseRange= range_response,
-                  opts_BasisFun = list(nFreq=200,
-                                       MatParam=5/2))
+modelMAP2 <- retrainSLGP(SLGPmodel=modelMAP, 
+                            newdata = df2, 
+                            method="MAP")
 
 ## ----SLGPplotting2, fig.cap = "Figure 2: Predictive probabilities of rad at medv and dis, as predicted by a SLGP.", fig.fullwidth=TRUE, fig.height=6, fig.width=8, fig.align='center',fig.pos="H"----
 library(viridis)
@@ -241,7 +228,7 @@ modelMAP3 <- slgp(rad~dis+medv, # Use a formula with two indexing variables
                  predictorsLower= c(range_x[,1]),
                  predictorsUpper= c(range_x[,2]),
                  responseRange= range_response,
-                 opts_BasisFun = list(nFreq=200,
+                 opts_BasisFun = list(nFreq=150,
                                       MatParam=5/2))
 
 dfGrid <- data.frame(expand.grid(seq(range_x[1, 1], range_x[1, 2], 0.5), 
