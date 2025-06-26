@@ -495,16 +495,8 @@ retrainSLGP <- function(SLGPmodel,
 
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
-    file_path <- system.file("extdata", "composed_model.rds", package = "SLGP")
-    if(file_path==""){
-      # print("./inst/extdata/composed_model.rds does not exist")
-      stan_model_path <- system.file("stan", "likelihoodComposed.stan", package = "SLGP")
-      # Load and compile the Stan model
-      stan_model <- rstan::stan_model(stan_model_path, model_name = "SLGP_Likelihood_composed")
-    }else{
-      # print("./inst/extdata/composed_model.rds exists")
-      stan_model <- readRDS(file_path)
-    }
+    stan_model <- stanmodels$likelihoodComposed
+
     temp <- intermediateQuantities$indSamplesToNodes
     temp[is.na(temp)]<- 1
     temp2 <- intermediateQuantities$weightSamplesToNodes
@@ -523,16 +515,8 @@ retrainSLGP <- function(SLGPmodel,
       mean_x = rep(0, ncol(functionValues))
     )
   }else{
-    file_path <- system.file("extdata", "simple_model.rds", package = "SLGP")
-    if(file_path==""){
-      # print("./inst/extdata/simple_model.rds does not exist")
-      stan_model_path <- system.file("stan", "likelihoodSimple.stan", package = "SLGP")
-      # Load and compile the Stan model
-      stan_model <- rstan::stan_model(stan_model_path, model_name = "SLGP_Likelihood_simple")
-    }else{
-      # print("./inst/extdata/simple_model.rds exists")
-      stan_model <- readRDS(file_path)
-    }
+    stan_model <- stanmodels$likelihoodSimple
+
     if(interpolateBasisFun=="nothing"){
       stan_data <- list(
         n = nrow(intermediateQuantities$indSamplesToNodes),
