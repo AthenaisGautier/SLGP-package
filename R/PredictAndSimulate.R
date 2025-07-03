@@ -570,9 +570,9 @@ predictSLGP_moments <- function(SLGPmodel,
 sampleSLGP <- function(SLGPmodel,
                        newX,
                        n,
-                       interpolateBasisFun = "NN",
-                       nIntegral=51,
-                       nDiscret=51,
+                       interpolateBasisFun = "WNN",
+                       nIntegral=101,
+                       nDiscret=101,
                        seed=NULL) {
   if (!requireNamespace("GoFKernel", quietly = TRUE)) {
     stop("Package 'GoFKernel' could not be used")
