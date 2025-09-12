@@ -9,7 +9,8 @@ pre_comput_WNN(
   predictorNames,
   responseName,
   nIntegral = 101,
-  nDiscret = 51
+  nDiscret = 101,
+  mode = "pdf"
 )
 }
 \arguments{
@@ -35,14 +36,5 @@ A list of intermediate quantities:
 \description{
 Computes intermediate quantities for evaluating basis functions via
 weighted nearest-neighbor (WNN) interpolation on a discretized grid.
-}
-\examples{
-\dontrun{
-# Generate sample data
-df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-# Normalize the data
-norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-pre_computed_quantities <- pre_comput_WNN(norm_df, c("x1", "x2"), "y")
-}
 }
 \keyword{internal}

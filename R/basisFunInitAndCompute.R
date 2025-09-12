@@ -295,7 +295,7 @@ initialize_basisfun_RFF <- function(dimension, nFreq, MatParam = 5/2, lengthscal
 #'
 initialize_basisfun_fillingRFF <- function(dimension, nFreq, MatParam = 5/2, lengthscale, seed=0) {
   # Check if basisFunctionsUsed is valid
-  print("You selected space-filling Fourier Features, in the current implementation, this is only available for Mat\ffffffc3rn (2k+1)/2 kernels.")
+  message("You selected space-filling Fourier Features, in the current implementation, this is only available for Mat\ffffffc3rn (2k+1)/2 kernels.")
   if (!requireNamespace("DiceDesign", quietly = TRUE)) {
     stop("Package 'DiceDesign' could not be used")
   }

@@ -7,7 +7,7 @@ comment = "#>"
 ## ----loadHousing, warning=FALSE-----------------------------------------------
 library(dplyr)
 # Load the dataset (available in MASS package)
-if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
+require(MASS)
 data("Boston", package = "MASS")
 df <- Boston %>%
   mutate(age_bin = cut(age, breaks = seq(0, 100, by = 10), include.lowest = FALSE)) %>%

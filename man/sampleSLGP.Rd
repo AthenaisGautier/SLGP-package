@@ -8,9 +8,10 @@ sampleSLGP(
   SLGPmodel,
   newX,
   n,
-  interpolateBasisFun = "NN",
-  nIntegral = 51,
-  nDiscret = 51,
+  interpolateBasisFun = "WNN",
+  mode = "inversion",
+  nIntegral = 101,
+  nDiscret = 101,
   seed = NULL
 )
 }
@@ -23,6 +24,9 @@ sampleSLGP(
 
 \item{interpolateBasisFun}{Character string specifying interpolation scheme for basis evaluation.
 One of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
+
+\item{mode}{Character string specifying sampling strategy.
+One of \code{"rejection"}, or \code{"inversion"} (default).}
 
 \item{nIntegral}{Integer; number of quadrature points for density approximation.}
 
@@ -39,7 +43,7 @@ Samples from the predictive distributions modeled by a SLGP at new covariate inp
 This method uses inverse transform sampling on the estimated posterior CDFs.
 }
 \examples{
-\dontrun{
+\donttest{
 # Load Boston housing dataset
 library(MASS)
 data("Boston")

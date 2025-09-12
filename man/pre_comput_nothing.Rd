@@ -8,7 +8,7 @@ pre_comput_nothing(
   normalizedData,
   predictorNames,
   responseName,
-  nIntegral = 51
+  nIntegral = 101
 )
 }
 \arguments{
@@ -33,14 +33,5 @@ A list of intermediate quantities used in SLGP basis function computation:
 \description{
 Computes intermediate quantities for evaluating basis functions when no interpolation
 is used. Basis functions are evaluated at the exact covariate and response grid locations.
-}
-\examples{
-\dontrun{
-# Generate sample data
-df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-# Normalize the data
-norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-pre_computed_quantities <- pre_comput_nothing(norm_df, c("x1", "x2"), "y")
-}
 }
 \keyword{internal}

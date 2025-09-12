@@ -7,7 +7,7 @@ knitr::opts_chunk$set(
 ## ----loadHousing--------------------------------------------------------------
 library(dplyr)
 # Load the dataset (available in MASS package)
-if (!requireNamespace("MASS", quietly = TRUE)) install.packages("MASS")
+require(MASS)
 data("Boston", package = "MASS")
 df <- Boston 
 range_response <- range(df$rad)

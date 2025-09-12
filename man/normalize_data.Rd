@@ -34,12 +34,4 @@ Scales the response and covariates of a dataset to the unit interval \eqn{[0,1]}
 This normalization is required before applying SLGP methods. If range bounds are
 not provided, they are computed from the data.
 }
-\examples{
-\dontrun{
-# Generate sample data
-df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-# Normalize the data
-norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-}
-}
 \keyword{internal}

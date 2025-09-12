@@ -365,19 +365,25 @@ exhibit heterogeneity and multi-modality.</p>
 <span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt;     intersect, setdiff, setequal, union</span></span>
 <span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co"># Load the dataset (available in MASS package)</span></span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;MASS&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">&quot;MASS&quot;</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;Boston&quot;</span>, <span class="at">package =</span> <span class="st">&quot;MASS&quot;</span>)</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>df <span class="ot">&lt;-</span> Boston <span class="sc">%&gt;%</span></span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">cut</span>(age, <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">10</span>), <span class="at">include.lowest =</span> <span class="cn">FALSE</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>  <span class="fu">group_by</span>(age_bin) <span class="sc">%&gt;%</span></span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">paste0</span>(age_bin, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">n=&quot;</span>, <span class="fu">n</span>()))<span class="sc">%&gt;%</span></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a>  <span class="fu">ungroup</span>()<span class="sc">%&gt;%</span></span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">factor</span>(age_bin, </span>
-<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>                          <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(age_bin), <span class="at">decreasing =</span> <span class="cn">FALSE</span>))) <span class="sc">%&gt;%</span></span>
-<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>  <span class="fu">data.frame</span>()</span>
-<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>range_response <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>) <span class="co"># Can use range(df$medv), or user defined range as we do here</span></span>
-<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>range_x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>) <span class="co"># Can use range(df$age), or user defined range as we do here</span></span></code></pre></div>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="fu">require</span>(MASS)</span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="co">#&gt; Le chargement a nécessité le package : MASS</span></span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a><span class="co">#&gt; Attachement du package : &#39;MASS&#39;</span></span>
+<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a><span class="co">#&gt; L&#39;objet suivant est masqué depuis &#39;package:dplyr&#39;:</span></span>
+<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="co">#&gt;     select</span></span>
+<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;Boston&quot;</span>, <span class="at">package =</span> <span class="st">&quot;MASS&quot;</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" tabindex="-1"></a>df <span class="ot">&lt;-</span> Boston <span class="sc">%&gt;%</span></span>
+<span id="cb1-20"><a href="#cb1-20" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">cut</span>(age, <span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">100</span>, <span class="at">by =</span> <span class="dv">10</span>), <span class="at">include.lowest =</span> <span class="cn">FALSE</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb1-21"><a href="#cb1-21" tabindex="-1"></a>  <span class="fu">group_by</span>(age_bin) <span class="sc">%&gt;%</span></span>
+<span id="cb1-22"><a href="#cb1-22" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">paste0</span>(age_bin, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">n=&quot;</span>, <span class="fu">n</span>()))<span class="sc">%&gt;%</span></span>
+<span id="cb1-23"><a href="#cb1-23" tabindex="-1"></a>  <span class="fu">ungroup</span>()<span class="sc">%&gt;%</span></span>
+<span id="cb1-24"><a href="#cb1-24" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">age_bin =</span> <span class="fu">factor</span>(age_bin, </span>
+<span id="cb1-25"><a href="#cb1-25" tabindex="-1"></a>                          <span class="at">levels =</span> <span class="fu">sort</span>(<span class="fu">unique</span>(age_bin), <span class="at">decreasing =</span> <span class="cn">FALSE</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb1-26"><a href="#cb1-26" tabindex="-1"></a>  <span class="fu">data.frame</span>()</span>
+<span id="cb1-27"><a href="#cb1-27" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" tabindex="-1"></a>range_response <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">50</span>) <span class="co"># Can use range(df$medv), or user defined range as we do here</span></span>
+<span id="cb1-29"><a href="#cb1-29" tabindex="-1"></a>range_x <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">100</span>) <span class="co"># Can use range(df$age), or user defined range as we do here</span></span></code></pre></div>
 <p>We represent the data.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">library</span>(ggpubr)</span>

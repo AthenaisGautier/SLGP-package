@@ -39,7 +39,7 @@ Computes quantile values at specified levels (\code{probs}) for new covariate po
 based on the posterior CDFs from a trained SLGP model.
 }
 \examples{
-\dontrun{
+\donttest{
 # Load Boston housing dataset
 library(MASS)
 data("Boston")

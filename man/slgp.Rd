@@ -11,8 +11,8 @@ slgp(
   method,
   basisFunctionsUsed,
   interpolateBasisFun = "NN",
-  nIntegral = 51,
-  nDiscret = 51,
+  nIntegral = 101,
+  nDiscret = 101,
   hyperparams = NULL,
   predictorsUpper = NULL,
   predictorsLower = NULL,
@@ -21,7 +21,8 @@ slgp(
   seed = NULL,
   opts_BasisFun = list(),
   BasisFunParam = NULL,
-  opts = list()
+  opts = list(),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -66,6 +67,9 @@ Either "none" (default) or "heuristic".}
 \item{BasisFunParam}{Optional list of precomputed basis function parameters.}
 
 \item{opts}{Optional list of extra settings passed to inference routines (e.g., \code{stan_iter}, \code{stan_chains}, \code{ndraws}).}
+
+\item{verbose}{Logical; if \code{TRUE}, print progress and diagnostic messages during computation.
+Defaults to \code{FALSE}.}
 }
 \value{
 An object of S4 class \code{\link{SLGP-class}}, containing:
@@ -83,7 +87,7 @@ The SLGP is a finite-rank Gaussian process model for conditional density estimat
 trained using MAP, MCMC, Laplace approximation, or left untrained ("none").
 }
 \examples{
-\dontrun{
+\donttest{
 # Load Boston housing dataset
 library(MASS)
 data("Boston")

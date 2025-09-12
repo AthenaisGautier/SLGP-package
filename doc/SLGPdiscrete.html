@@ -359,7 +359,7 @@ Since rad is an integer-valued variable, our goal is to adjust the
 implementation for this.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co"># Load the dataset (available in MASS package)</span></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">&quot;MASS&quot;</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">&quot;MASS&quot;</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">require</span>(MASS)</span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;Boston&quot;</span>, <span class="at">package =</span> <span class="st">&quot;MASS&quot;</span>)</span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>df <span class="ot">&lt;-</span> Boston </span>
 <span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>range_response <span class="ot">&lt;-</span> <span class="fu">range</span>(df<span class="sc">$</span>rad)</span>

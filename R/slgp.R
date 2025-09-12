@@ -31,6 +31,8 @@
 #' @param opts_BasisFun List of optional configuration parameters passed to the basis function initializer.
 #' @param BasisFunParam Optional list of precomputed basis function parameters.
 #' @param opts Optional list of extra settings passed to inference routines (e.g., \code{stan_iter}, \code{stan_chains}, \code{ndraws}).
+#' @param verbose Logical; if \code{TRUE}, print progress and diagnostic messages during computation.
+#'   Defaults to \code{FALSE}.
 #'
 #' @return An object of S4 class \code{\link{SLGP-class}}, containing:
 #' \describe{
@@ -46,7 +48,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Load Boston housing dataset
 #' library(MASS)
 #' data("Boston")
@@ -86,21 +88,22 @@
 #'
 slgp <- function(formula,
                  data,
-                 epsilonStart =NULL,
+                 epsilonStart = NULL,
                  method,
                  basisFunctionsUsed,
-                 interpolateBasisFun="NN",
-                 nIntegral=51,
-                 nDiscret=51,
+                 interpolateBasisFun = "NN",
+                 nIntegral = 101,
+                 nDiscret = 101,
                  hyperparams = NULL,
-                 predictorsUpper= NULL,
-                 predictorsLower= NULL,
-                 responseRange= NULL,
+                 predictorsUpper = NULL,
+                 predictorsLower = NULL,
+                 responseRange = NULL,
                  sigmaEstimationMethod = "none",
-                 seed=NULL,
+                 seed = NULL,
                  opts_BasisFun = list(),
                  BasisFunParam = NULL,
-                 opts = list()) {
+                 opts = list(),
+                 verbose = FALSE) {
   if(!is.null(seed)){
     set.seed(seed)
   }
@@ -196,6 +199,17 @@ slgp <- function(formula,
     })
     sigma2 <- median(5/resSim)
   }
+
+  if(is.null(opts$discrete)){
+    weightQuadrature <- c(1/nIntegral/2, rep(1/(nIntegral-1), nIntegral-2), 1/nIntegral/2)
+  }else{
+    if(opts$discrete){
+      weightQuadrature <- rep(1/(nIntegral), nIntegral)
+    }else{
+      weightQuadrature <- c(1/nIntegral/2, rep(1/(nIntegral-1), nIntegral-2), 1/nIntegral/2)
+    }
+  }
+
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
     if(file.exists("./inst/extdata/composed_model.rds")){
@@ -218,7 +232,7 @@ slgp <- function(formula,
       functionValues = functionValues,
       weightMatrix = temp2,
       indMatrix =temp,
-      weightQuadrature = rep(1/nIntegral, nIntegral),
+      weightQuadrature = weightQuadrature,
       Sigma = diag(sigma2, ncol(functionValues)),
       mean_x = rep(0, ncol(functionValues))
     )
@@ -239,8 +253,8 @@ slgp <- function(formula,
         p = ncol(functionValues),
         meanFvalues = colMeans(functionValues[intermediateQuantities$indSamplesToNodes,]),
         functionValues = functionValues[!is.na(intermediateQuantities$indNodesToIntegral),],
-        weightQuadrature = rep(1/nIntegral, nIntegral),
         multiplicities=c(as.matrix(table(intermediateQuantities$indSamplesToPredictor))[, 1]),
+        weightQuadrature = weightQuadrature,
         Sigma = diag(sigma2, ncol(functionValues)),
         mean_x = rep(0, ncol(functionValues))
       )
@@ -253,7 +267,7 @@ slgp <- function(formula,
         p = ncol(functionValues),
         meanFvalues = colMeans(functionValues[intermediateQuantities$indSamplesToNodes,]),
         functionValues = functionValues[!is.na(intermediateQuantities$indNodesToIntegral),],
-        weightQuadrature = rep(1/nIntegral, nIntegral),
+        weightQuadrature = weightQuadrature,
         multiplicities=c(as.matrix(table(intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes]))[, 1]),
         Sigma = diag(sigma2, ncol(functionValues)),
         mean_x = rep(0, ncol(functionValues))
@@ -283,17 +297,19 @@ slgp <- function(formula,
     epsilon <-  rstan::extract(fit)$epsilon
     fit_summary <- rstan::summary(fit)
     rhats <- fit_summary$summary[,"Rhat"]
-    cat("Convergence diagnostics:\n")
-    cat(paste0("  * A R-hat close to 1 indicates a good convergence.\nHere, the dimension of the sampled values is ", stan_data$p, ".\nThe range of the R-hats is: ",
-               round(min(rhats[-c(length(rhats))]), 5), " - ",
-               round(max(rhats[-c(length(rhats))]), 5)))
-    # print(rhats[-c(length(rhats))])
+    if(verbose){
+      cat("Convergence diagnostics:\n")
+      cat(paste0("  * A R-hat close to 1 indicates a good convergence.\nHere, the dimension of the sampled values is ", stan_data$p, ".\nThe range of the R-hats is: ",
+                 round(min(rhats[-c(length(rhats))]), 5), " - ",
+                 round(max(rhats[-c(length(rhats))]), 5)))
+    }
     ess <- fit_summary$summary[,"n_eff"]
-    cat(paste0("  * Effective Sample Sizes estimates the number of independent draws from the posterior.\nHigher values are better.\nThe range of the ESS is: ",
-               round(min(ess[-c(length(ess))]), 1), " - ",
-               round(max(ess[-c(length(ess))]), 1)))
-    # print(ess[-c(length(ess))])
-    cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
+    if(verbose){
+      cat(paste0("  * Effective Sample Sizes estimates the number of independent draws from the posterior.\nHigher values are better.\nThe range of the ESS is: ",
+                 round(min(ess[-c(length(ess))]), 1), " - ",
+                 round(max(ess[-c(length(ess))]), 1)))
+      cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
+    }
     rstan::check_energy(fit)
     logPost <- NaN # To implement later
   }
@@ -330,7 +346,11 @@ slgp <- function(formula,
     fit <- rstan::optimizing(
       object = stan_model,
       data = stan_data,
-      hessian = FALSE)
+      hessian = FALSE,
+      iter = 5000,
+      tol_grad = 1e-12,
+      tol_param = 1e-12,
+      tol_obj = 1e-14)
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
     # The log-posterior value
@@ -386,6 +406,8 @@ slgp <- function(formula,
 #' @param seed Optional integer to set the random seed for reproducibility.
 #' @param opts Optional list of additional options passed to inference routines:
 #'   \code{stan_chains}, \code{stan_iter}, \code{ndraws}, etc.
+#' @param verbose Logical; if \code{TRUE}, print progress and diagnostic messages during computation.
+#'   Defaults to \code{FALSE}.
 #'
 #' @return An updated object of class \code{\link{SLGP-class}} with retrained coefficients and updated posterior information.
 #'
@@ -399,7 +421,7 @@ slgp <- function(formula,
 #' PhD Thesis, Universität Bern. \url{https://boristheses.unibe.ch/4377/}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Load Boston housing dataset
 #' library(MASS)
 #' data("Boston")
@@ -429,12 +451,13 @@ retrainSLGP <- function(SLGPmodel,
                         epsilonStart =NULL,
                         method,
                         interpolateBasisFun="WNN",
-                        nIntegral=51,
-                        nDiscret=51,
+                        nIntegral=101,
+                        nDiscret=101,
                         hyperparams = NULL,
                         sigmaEstimationMethod = "none",
                         seed=NULL,
-                        opts = list()) {
+                        opts = list(),
+                        verbose = FALSE) {
   if(!is.null(seed)){
     set.seed(seed)
   }
@@ -492,6 +515,24 @@ retrainSLGP <- function(SLGPmodel,
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
+  if(sigmaEstimationMethod=="heuristic"){
+    Nsim <- 50
+    resSim <- sapply(seq(Nsim), function(i){
+      eps <- rnorm(ncol(functionValues))
+      return(diff(range(functionValues%*%eps)))
+    })
+    sigma2 <- median(5/resSim)
+  }
+
+  if(is.null(opts$discrete)){
+    weightQuadrature <- c(1/nIntegral/2, rep(1/(nIntegral-1), nIntegral-2), 1/nIntegral/2)
+  }else{
+    if(opts$discrete){
+      weightQuadrature <- rep(1/(nIntegral), nIntegral)
+    }else{
+      weightQuadrature <- c(1/nIntegral/2, rep(1/(nIntegral-1), nIntegral-2), 1/nIntegral/2)
+    }
+  }
 
   # Create the data list required for the estimation method selected
   if(interpolateBasisFun == "WNN"){
@@ -510,7 +551,7 @@ retrainSLGP <- function(SLGPmodel,
       functionValues = functionValues,
       weightMatrix = temp2,
       indMatrix =temp,
-      weightQuadrature = rep(1/nIntegral, nIntegral),
+      weightQuadrature = weightQuadrature,
       Sigma = diag(sigma2, ncol(functionValues)),
       mean_x = rep(0, ncol(functionValues))
     )
@@ -525,7 +566,7 @@ retrainSLGP <- function(SLGPmodel,
         p = ncol(functionValues),
         meanFvalues = colMeans(functionValues[intermediateQuantities$indSamplesToNodes,]),
         functionValues = functionValues[!is.na(intermediateQuantities$indNodesToIntegral),],
-        weightQuadrature = rep(1/nIntegral, nIntegral),
+        weightQuadrature = weightQuadrature,
         multiplicities=c(as.matrix(table(intermediateQuantities$indSamplesToPredictor))[, 1]),
         Sigma = diag(sigma2, ncol(functionValues)),
         mean_x = rep(0, ncol(functionValues))
@@ -539,7 +580,7 @@ retrainSLGP <- function(SLGPmodel,
         p = ncol(functionValues),
         meanFvalues = colMeans(functionValues[intermediateQuantities$indSamplesToNodes,]),
         functionValues = functionValues[!is.na(intermediateQuantities$indNodesToIntegral),],
-        weightQuadrature = rep(1/nIntegral, nIntegral),
+        weightQuadrature = weightQuadrature,
         multiplicities=c(as.matrix(table(intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes]))[, 1]),
         Sigma = diag(sigma2, ncol(functionValues)),
         mean_x = rep(0, ncol(functionValues))
@@ -570,17 +611,19 @@ retrainSLGP <- function(SLGPmodel,
     epsilon <-  rstan::extract(fit)$epsilon
     fit_summary <- rstan::summary(fit)
     rhats <- fit_summary$summary[,"Rhat"]
-    cat("Convergence diagnostics:\n")
-    cat(paste0("  * A R-hat close to 1 indicates a good convergence.\nHere, the dimension of the sampled values is ", stan_data$p, ".\nThe range of the R-hats is: ",
-               round(min(rhats[-c(length(rhats))]), 5), " - ",
-               round(max(rhats[-c(length(rhats))]), 5)))
-    # print(rhats[-c(length(rhats))])
+    if(verbose){
+      cat("Convergence diagnostics:\n")
+      cat(paste0("  * A R-hat close to 1 indicates a good convergence.\nHere, the dimension of the sampled values is ", stan_data$p, ".\nThe range of the R-hats is: ",
+                 round(min(rhats[-c(length(rhats))]), 5), " - ",
+                 round(max(rhats[-c(length(rhats))]), 5)))
+    }
     ess <- fit_summary$summary[,"n_eff"]
-    cat(paste0("  * Effective Sample Sizes estimates the number of independent draws from the posterior.\nHigher values are better.\nThe range of the ESS is: ",
-               round(min(ess[-c(length(ess))]), 1), " - ",
-               round(max(ess[-c(length(ess))]), 1)))
-    # print(ess[-c(length(ess))])
-    cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
+    if(verbose){
+      cat(paste0("  * Effective Sample Sizes estimates the number of independent draws from the posterior.\nHigher values are better.\nThe range of the ESS is: ",
+                 round(min(ess[-c(length(ess))]), 1), " - ",
+                 round(max(ess[-c(length(ess))]), 1)))
+      cat(paste0("  * Checking the Bayesian Fraction of Missing Information is also a way to locate issues.\n"))
+    }
     rstan::check_energy(fit)
     logPost <- NaN
   }
@@ -618,7 +661,11 @@ retrainSLGP <- function(SLGPmodel,
     fit <- rstan::optimizing(
       object = stan_model,
       data = stan_data,
-      hessian = FALSE)
+      hessian = FALSE,
+      iter = 5000,
+      tol_grad = 1e-12,
+      tol_param = 1e-12,
+      tol_obj = 1e-14)
     # The MAP estimates
     epsilon <- matrix(fit$par, nrow=1)
     logPost <- c(fit$value)

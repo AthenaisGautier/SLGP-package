@@ -9,7 +9,7 @@ pre_comput_NN(
   predictorNames,
   responseName,
   nIntegral = 101,
-  nDiscret = 51
+  nDiscret = 101
 )
 }
 \arguments{
@@ -35,14 +35,5 @@ A list of intermediate quantities used in SLGP evaluation:
 \description{
 Computes intermediate quantities for evaluating SLGP basis functions using
 Nearest Neighbor (NN) interpolation over a regular grid in the normalized domain.
-}
-\examples{
-\dontrun{
-# Generate sample data
-df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-# Normalize the data
-norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-pre_computed_quantities <- pre_comput_NN(norm_df, c("x1", "x2"), "y")
-}
 }
 \keyword{internal}

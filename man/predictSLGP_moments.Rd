@@ -42,7 +42,7 @@ Computes statistical moments (e.g., mean, variance, ...) of the posterior predic
 distributions at new covariate locations, using a given SLGP model.
 }
 \examples{
-\dontrun{
+\donttest{
 # Load Boston housing dataset
 library(MASS)
 data("Boston")

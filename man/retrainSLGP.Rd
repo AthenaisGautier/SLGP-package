@@ -10,12 +10,13 @@ retrainSLGP(
   epsilonStart = NULL,
   method,
   interpolateBasisFun = "WNN",
-  nIntegral = 51,
-  nDiscret = 51,
+  nIntegral = 101,
+  nDiscret = 101,
   hyperparams = NULL,
   sigmaEstimationMethod = "none",
   seed = NULL,
-  opts = list()
+  opts = list(),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -51,6 +52,9 @@ either \code{"none"} (default) or \code{"heuristic"}.}
 
 \item{opts}{Optional list of additional options passed to inference routines:
 \code{stan_chains}, \code{stan_iter}, \code{ndraws}, etc.}
+
+\item{verbose}{Logical; if \code{TRUE}, print progress and diagnostic messages during computation.
+Defaults to \code{FALSE}.}
 }
 \value{
 An updated object of class \code{\link{SLGP-class}} with retrained coefficients and updated posterior information.
@@ -62,7 +66,7 @@ using new data, new inference settings, or updated hyperparameters. It reuses th
 basis functions from the original model.
 }
 \examples{
-\dontrun{
+\donttest{
 # Load Boston housing dataset
 library(MASS)
 data("Boston")

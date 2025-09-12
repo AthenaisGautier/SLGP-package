@@ -32,7 +32,7 @@ Computes the posterior cumulative distribution function (CDF) values at specifie
 covariate values using a fitted SLGP model.
 }
 \examples{
-\dontrun{
+\donttest{
 # Load Boston housing dataset
 library(MASS)
 data("Boston")

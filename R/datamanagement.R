@@ -15,13 +15,6 @@
 #'
 #' @keywords internal
 #'
-#' @examples
-#' \dontrun{
-#' # Generate sample data
-#' df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-#' # Normalize the data
-#' norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-#' }
 normalize_data <- function(data, predictorNames, responseName, predictorsUpper = NULL, predictorsLower = NULL, responseRange = NULL) {
   # Check if predictor and response names exist in the dataframe
   stopifnot("The predictor names are not all in the dataset colnames"=all(predictorNames %in% colnames(data)), responseName %in% colnames(data))
@@ -74,15 +67,7 @@ normalize_data <- function(data, predictorNames, responseName, predictorsUpper =
 #'
 #' @keywords internal
 #'
-#' @examples
-#' \dontrun{
-#' # Generate sample data
-#' df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-#' # Normalize the data
-#' norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-#' pre_computed_quantities <- pre_comput_nothing(norm_df, c("x1", "x2"), "y")
-#' }
-pre_comput_nothing <- function(normalizedData, predictorNames, responseName, nIntegral=51) {
+pre_comput_nothing <- function(normalizedData, predictorNames, responseName, nIntegral=101) {
   # Extract predictor and response columns
   predictors <- normalizedData[, predictorNames, drop = FALSE]
 
@@ -139,15 +124,7 @@ pre_comput_nothing <- function(normalizedData, predictorNames, responseName, nIn
 #'
 #' @keywords internal
 #'
-#' @examples
-#' \dontrun{
-#' # Generate sample data
-#' df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-#' # Normalize the data
-#' norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-#' pre_computed_quantities <- pre_comput_NN(norm_df, c("x1", "x2"), "y")
-#' }
-pre_comput_NN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=51) {
+pre_comput_NN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=101) {
   # Lets map the samples to the NN:
   normalizedData[, responseName] <- round(normalizedData[, responseName]*(nIntegral-1))/(nIntegral-1)
   normalizedData[, predictorNames] <- round(normalizedData[, predictorNames]*(nDiscret-1))/(nDiscret-1)
@@ -203,15 +180,8 @@ pre_comput_NN <- function(normalizedData, predictorNames, responseName, nIntegra
 #'
 #' @keywords internal
 #'
-#' @examples
-#' \dontrun{
-#' # Generate sample data
-#' df <- data.frame(x1 = c(1, 2, 3), x2 = c(5, 6, 8), y = c(10, 20, 30))
-#' # Normalize the data
-#' norm_df <- normalize_data(df, predictorNames=c("x1", "x2"), responseName="y")
-#' pre_computed_quantities <- pre_comput_WNN(norm_df, c("x1", "x2"), "y")
-#' }
-pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegral=101, nDiscret=51) {
+pre_comput_WNN <- function(normalizedData, predictorNames, responseName,
+                           nIntegral=101, nDiscret=101, mode="pdf") {
   # Lets map the samples to the NN:
   normalizedData2<-normalizedData
   normalizedData2[, responseName] <- trunc(normalizedData[, responseName]*(nIntegral-1))/(nIntegral-1)
@@ -219,6 +189,7 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
 
   # We need to extract the predictor, and edit it to add all the dimensions
   predictors <- normalizedData2
+
   neighboursStructure <- t(expand.grid(rep(list(c(0,1/(nDiscret-1))), length(predictorNames)+1)))
   neighboursStructure[1, ] <- neighboursStructure[1, ]*(nDiscret-1)/(nIntegral-1)
   neighboursStructure <- unname(matrix(apply(predictors, 1, FUN=function(x){
@@ -237,14 +208,15 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
     x <-as.numeric(normalizedData[i, ])
     sapply(seq(2^(1+length(predictorNames))), function(j){
       y <- as.numeric(adjacentNodes[indSamplesToNodes[i, j], ])
-      return(1-max(abs(x-y)*c(nIntegral-1, rep(nDiscret-1, length(predictorNames)))))
+      return(prod(1-abs(x-y)*c(nIntegral-1, rep(nDiscret-1, length(predictorNames)))))
     })
   }))
+
   weightSamplesToNodes[is.na(weightSamplesToNodes)] <-0
   indSamplesToNodes[is.na(indSamplesToNodes)]<- 1
 
   weightSamplesToNodes <- abs(weightSamplesToNodes)
-  weightSamplesToNodes <- weightSamplesToNodes / rowSums(weightSamplesToNodes)
+  weightSamplesToNodes <- round(weightSamplesToNodes, 15)
   rm(neighboursStructure, predictors)
   gc()
 
@@ -253,7 +225,8 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
   predictors <- round(adjacentNodes[, -c(1), drop=FALSE], 15)
   uniquePredictors <- unique(predictors)
   # Where the functions need to be evaluated
-  nodes <- expand.grid(seq(0, 1,, nIntegral), seq(nrow(uniquePredictors)))
+  u <- seq(0, 1,, nIntegral)
+  nodes <- expand.grid(u, seq(nrow(uniquePredictors)))
   nodes <- cbind(nodes[, 1], uniquePredictors[nodes[, 2], ]) #All the values useful in the integral
   colnames(nodes) <- c(responseName, predictorNames)
 
@@ -263,6 +236,7 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
   # Index of the node to use for each sample point
   indTemp <- c(match(data.frame(t(adjacentNodes)), data.frame(t(nodes))))
   indSamplesToNodes <- matrix(indTemp[indSamplesToNodes], nrow=nrow(indSamplesToNodes))
+
   rm(indTemp)
 
 
@@ -273,6 +247,38 @@ pre_comput_WNN <- function(normalizedData, predictorNames, responseName, nIntegr
     indSamplesToNodes = indSamplesToNodes,
     weightSamplesToNodes = weightSamplesToNodes
   )
+
+  if(mode=="cdf"){
+    # Need what is the first node of an integral (then all the nodes in an integral are this ind + 1:Nintegral)
+    first_idx <- match(unique(indNodesToIntegral), indNodesToIntegral)
+    ind_int <- 1:nIntegral
+
+    temp <- sapply(seq(nrow(normalizedData)), function(i){
+      indx <- indSamplesToNodes[i, ]
+      t <- as.numeric(normalizedData[i, responseName])
+      x <- c(normalizedData[i, predictorNames])
+      dt <- 1/(nIntegral-1)
+      dx <- 1/(nDiscret-1)
+      v_weights_t <- ifelse(t<(u-dt), 0,
+                            ifelse(t<(u), (t-(u-dt))^2/2/dt,
+                                   ifelse(t<(u+dt), dt/2+(t-u)*(u+2*dt-t)/2/dt, dt)))
+      v_weights_t[1] <- v_weights_t[1] -dt/2
+      v_weights_t <-rep(v_weights_t,length(indx))
+      v_weights_x <- rep(0, nIntegral*length(indx))
+      v_ind <- rep(ind_int, length(indx))
+      uInd <- unique(indNodesToIntegral[indx])
+      for(j in seq_along(uInd)){
+        y <- c(nodes[first_idx[uInd[j]], predictorNames])
+        temp <- abs(x-y)/dx
+        v_weights_x[(j-1)*nIntegral+ind_int] <-  prod(ifelse(temp<=1, 1-temp, 0))
+        v_ind[(j-1)*nIntegral+ind_int] <- first_idx[uInd[j]]+ind_int-1
+      }
+      return(c(v_weights_t*v_weights_x, v_ind))
+    })
+    intermediate_quantities$weightSamplesToNodesCDF <- t(temp[1:(nIntegral*ncol(indSamplesToNodes)), ])
+    intermediate_quantities$indSamplesToNodesCDF  <- t(temp[-c(1:(nIntegral*ncol(indSamplesToNodes))), ])
+  }
+
 
   return(intermediate_quantities)
 }
