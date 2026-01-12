@@ -1,7 +1,7 @@
 Package: SLGP
 Type: Package
 Title: Spatial Logistic Gaussian Process for Field Density Estimation 
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: 
     c(person(given = "Athénaïs",
              family = "Gautier",
