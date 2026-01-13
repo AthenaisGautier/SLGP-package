@@ -657,7 +657,7 @@ sampleSLGP <- function(SLGPmodel,
     res<- do.call(rbind, res)
     return(res)
   }
-  if(mode == rejection){
+  if(mode == "rejection"){
     predictorNames <- SLGPmodel@covariateName
     responseName <-  SLGPmodel@responseName
 
@@ -669,7 +669,7 @@ sampleSLGP <- function(SLGPmodel,
                                      responseRange = SLGPmodel@responseRange)
     # Do we perform exact function evaluation, or we use a grid and interpolate it.
     if(interpolateBasisFun=="nothing" || interpolateBasisFun =="NN"){
-      error("Only implemented for WNN")
+      stop("Rejection sampling is only implemented for WNN")
     }
     if(interpolateBasisFun == "WNN"){
       intermediateQuantities <- pre_comput_WNN(normalizedData=normalizedData,
