@@ -95,8 +95,25 @@ predictSLGP_newNode <- function(SLGPmodel,
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
+  trend <- SLGPmodel@trend
+  if(is.null(trend)){
+    trend <- function(df){return(rep(0, nrow(df)))}
+    trendValues <- rep(0, nrow(functionValues))
+  }else{
+    predictorsUpper <- SLGPmodel@predictorsRange$upper
+    predictorsLower <- SLGPmodel@predictorsRange$lower
+    responseRange <- SLGPmodel@responseRange
+    dftrend <- as.data.frame(t(t(as.matrix(intermediateQuantities$nodes))*
+                                 c(responseRange[2]-responseRange[1],
+                                   predictorsUpper - predictorsLower)+
+                                 c(responseRange[1], predictorsLower)))
+    colnames(dftrend) <- c(responseName, predictorNames)
+    trendValues <- trend(df=dftrend)
+    rm(dftrend)
+  }
+
   epsilon <- SLGPmodel@coefficients
-  GPvalues <-functionValues %*% t(epsilon)
+  GPvalues <- functionValues %*% t(epsilon) + trendValues
   domain_size <- diff(SLGPmodel@responseRange)
 
   quad_w <- rep(1/(nIntegral-1), nIntegral)
@@ -216,8 +233,24 @@ predictSLGP_cdf <- function(SLGPmodel,
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
+  trend <- SLGPmodel@trend
+  if(is.null(trend)){
+    trend <- function(df){return(rep(0, nrow(df)))}
+    trendValues <- rep(0, nrow(functionValues))
+  }else{
+    predictorsUpper <- SLGPmodel@predictorsRange$upper
+    predictorsLower <- SLGPmodel@predictorsRange$lower
+    responseRange <- SLGPmodel@responseRange
+    dftrend <- as.data.frame(t(t(as.matrix(intermediateQuantities$nodes))*
+                                 c(responseRange[2]-responseRange[1],
+                                   predictorsUpper - predictorsLower)+
+                                 c(responseRange[1], predictorsLower)))
+    colnames(dftrend) <- c(responseName, predictorNames)
+    trendValues <- trend(df=dftrend)
+    rm(dftrend)
+  }
   epsilon <- SLGPmodel@coefficients
-  GPvalues <-functionValues %*% t(epsilon)
+  GPvalues <-functionValues %*% t(epsilon) + trendValues
 
   domain_size <- diff(SLGPmodel@responseRange)
   quad_w <- rep(1/(nIntegral-1), nIntegral)*domain_size
@@ -367,8 +400,25 @@ predictSLGP_quantiles <- function(SLGPmodel,
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
+  trend <- SLGPmodel@trend
+  if(is.null(trend)){
+    trend <- function(df){return(rep(0, nrow(df)))}
+    trendValues <- rep(0, nrow(functionValues))
+  }else{
+    predictorsUpper <- SLGPmodel@predictorsRange$upper
+    predictorsLower <- SLGPmodel@predictorsRange$lower
+    responseRange <- SLGPmodel@responseRange
+    dftrend <- as.data.frame(t(t(as.matrix(intermediateQuantities$nodes))*
+                                 c(responseRange[2]-responseRange[1],
+                                   predictorsUpper - predictorsLower)+
+                                 c(responseRange[1], predictorsLower)))
+    colnames(dftrend) <- c(responseName, predictorNames)
+    trendValues <- trend(df=dftrend)
+    rm(dftrend)
+  }
+
   epsilon <- SLGPmodel@coefficients
-  GPvalues <-functionValues %*% t(epsilon)
+  GPvalues <-functionValues %*% t(epsilon) + trendValues
   domain_size <- diff(SLGPmodel@responseRange)
 
   quad_w <- rep(1/(nIntegral-1), nIntegral)
@@ -507,8 +557,24 @@ predictSLGP_moments <- function(SLGPmodel,
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
+  trend <- SLGPmodel@trend
+  if(is.null(trend)){
+    trend <- function(df){return(rep(0, nrow(df)))}
+    trendValues <- rep(0, nrow(functionValues))
+  }else{
+    predictorsUpper <- SLGPmodel@predictorsRange$upper
+    predictorsLower <- SLGPmodel@predictorsRange$lower
+    responseRange <- SLGPmodel@responseRange
+    dftrend <- as.data.frame(t(t(as.matrix(intermediateQuantities$nodes))*
+                                 c(responseRange[2]-responseRange[1],
+                                   predictorsUpper - predictorsLower)+
+                                 c(responseRange[1], predictorsLower)))
+    colnames(dftrend) <- c(responseName, predictorNames)
+    trendValues <- trend(df=dftrend)
+    rm(dftrend)
+  }
   epsilon <- SLGPmodel@coefficients
-  GPvalues <-functionValues %*% t(epsilon)
+  GPvalues <-functionValues %*% t(epsilon)+trendValues
   domain_size <- diff(SLGPmodel@responseRange)
 
   quad_w <- rep(1/(nIntegral-1), nIntegral)
@@ -561,8 +627,6 @@ predictSLGP_moments <- function(SLGPmodel,
 #' @param n Integer or integer vector specifying how many samples to draw at each input point.
 #' @param interpolateBasisFun Character string specifying interpolation scheme for basis evaluation.
 #'   One of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).
-#' @param mode Character string specifying sampling strategy.
-#'   One of \code{"rejection"}, or \code{"inversion"} (default).
 #' @param nDiscret Integer; discretization step for the response axis.
 #' @param nIntegral Integer; number of quadrature points for density approximation.
 #' @param seed Optional integer to set a random seed for reproducibility.
@@ -605,7 +669,6 @@ sampleSLGP <- function(SLGPmodel,
                        newX,
                        n,
                        interpolateBasisFun = "WNN",
-                       mode = "inversion",
                        nIntegral=101,
                        nDiscret=101,
                        seed=NULL) {
@@ -632,62 +695,27 @@ sampleSLGP <- function(SLGPmodel,
   grid <- data.frame(cbind(grid[, 1], newX[grid[, 2], ]))
   colnames(grid)<- c(SLGPmodel@responseName, colnames(newX))
 
-  if(mode == "inversion"){
 
-    cdfs <- predictSLGP_cdf(SLGPmodel=SLGPmodel,
-                            newNodes=grid,
-                            interpolateBasisFun = interpolateBasisFun,
-                            nIntegral=nIntegral,
-                            nDiscret=nDiscret)
-    mean_cdfs <- rowMeans(cdfs[, -c(1:ncol(grid)), drop=FALSE])
-    res <- lapply(seq(npred), function(j){
-      temp <- mean_cdfs[(j-1)*nIntegral+1:nIntegral]
-      f <- approxfun(x=u, y=temp)
-      finv<-GoFKernel::inverse(f,
-                               lower=SLGPmodel@responseRange[1],
-                               upper=SLGPmodel@responseRange[2])
-      # plot(f, from=0, to=1)
-      # range(temp)
-      r <- runif(nsamp[j])
-      y<-  sapply(r, finv)
-      df <- data.frame(unname(y), unname(newX[rep(j, nsamp[j]), , drop=FALSE]))
-      colnames(df)<- c(SLGPmodel@responseName, colnames(newX))
-      return(df)
-    })
-    res<- do.call(rbind, res)
-    return(res)
-  }
-  if(mode == "rejection"){
-    predictorNames <- SLGPmodel@covariateName
-    responseName <-  SLGPmodel@responseName
-
-    normalizedData <- normalize_data(data=grid,
-                                     predictorNames=predictorNames,
-                                     responseName=responseName,
-                                     predictorsUpper = SLGPmodel@predictorsRange$upper,
-                                     predictorsLower = SLGPmodel@predictorsRange$lower,
-                                     responseRange = SLGPmodel@responseRange)
-    # Do we perform exact function evaluation, or we use a grid and interpolate it.
-    if(interpolateBasisFun=="nothing" || interpolateBasisFun =="NN"){
-      stop("Rejection sampling is only implemented for WNN")
-    }
-    if(interpolateBasisFun == "WNN"){
-      intermediateQuantities <- pre_comput_WNN(normalizedData=normalizedData,
-                                               predictorNames=predictorNames,
-                                               responseName=responseName,
-                                               nIntegral=nIntegral,
-                                               nDiscret=nDiscret)
-    }
-    dimension <- length(predictorNames)+1
-    opts_BasisFun <- SLGPmodel@opts_BasisFun
-    ## Initialise the basis functions to use
-    initBasisFun <- SLGPmodel@BasisFunParam
-    lengthscale <- SLGPmodel@hyperparams$lengthscale
-    ## Evaluate basis funs on nodes
-    functionValues <- evaluate_basis_functions(parameters=initBasisFun,
-                                               X=intermediateQuantities$nodes,
-                                               lengthscale=lengthscale)
-    epsilon <- SLGPmodel@coefficients
-    GPvalues <-functionValues %*% t(epsilon)
-  }
+  cdfs <- predictSLGP_cdf(SLGPmodel=SLGPmodel,
+                          newNodes=grid,
+                          interpolateBasisFun = interpolateBasisFun,
+                          nIntegral=nIntegral,
+                          nDiscret=nDiscret)
+  mean_cdfs <- rowMeans(cdfs[, -c(1:ncol(grid)), drop=FALSE])
+  res <- lapply(seq(npred), function(j){
+    temp <- mean_cdfs[(j-1)*nIntegral+1:nIntegral]
+    f <- approxfun(x=u, y=temp)
+    finv<-GoFKernel::inverse(f,
+                             lower=SLGPmodel@responseRange[1],
+                             upper=SLGPmodel@responseRange[2])
+    # plot(f, from=0, to=1)
+    # range(temp)
+    r <- runif(nsamp[j])
+    y<-  sapply(r, finv)
+    df <- data.frame(unname(y), unname(newX[rep(j, nsamp[j]), , drop=FALSE]))
+    colnames(df)<- c(SLGPmodel@responseName, colnames(newX))
+    return(df)
+  })
+  res<- do.call(rbind, res)
+  return(res)
 }

@@ -33,8 +33,9 @@ normalize_data <- function(data, predictorNames, responseName, predictorsUpper =
     responseRange <- c(min(response, na.rm = TRUE), max(response, na.rm = TRUE))
   }
 
+  predictorsScale <- ifelse(abs(predictorsUpper - predictorsLower)<=1e-10, 1, predictorsUpper - predictorsLower)
   # Normalize predictors to the range [0, 1]
-  normalized_predictors <- scale(predictors, center = predictorsLower, scale = predictorsUpper - predictorsLower)
+  normalized_predictors <- scale(predictors, center = predictorsLower, scale = predictorsScale)
 
   # Normalize response to the range [0, 1]
   normalized_response <- (response - responseRange[1]) / (responseRange[2] - responseRange[1])

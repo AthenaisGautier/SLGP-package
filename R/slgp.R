@@ -31,6 +31,7 @@
 #' @param opts_BasisFun List of optional configuration parameters passed to the basis function initializer.
 #' @param BasisFunParam Optional list of precomputed basis function parameters.
 #' @param opts Optional list of extra settings passed to inference routines (e.g., \code{stan_iter}, \code{stan_chains}, \code{ndraws}).
+#' @param trend Optional a function that returns the trend of the transformed GP (not to be estimated). If not provided, it defaults to 0.
 #' @param verbose Logical; if \code{TRUE}, print progress and diagnostic messages during computation.
 #'   Defaults to \code{FALSE}.
 #'
@@ -103,6 +104,7 @@ slgp <- function(formula,
                  opts_BasisFun = list(),
                  BasisFunParam = NULL,
                  opts = list(),
+                 trend = NULL,
                  verbose = FALSE) {
   if(!is.null(seed)){
     set.seed(seed)
@@ -190,6 +192,18 @@ slgp <- function(formula,
   functionValues <- evaluate_basis_functions(parameters=initBasisFun,
                                              X=intermediateQuantities$nodes,
                                              lengthscale=lengthscale)
+  if(is.null(trend)){
+    trend <- function(df){return(rep(0, nrow(df)))}
+    trendValues <- rep(0, nrow(functionValues))
+  }else{
+    dftrend <- as.data.frame(t(t(as.matrix(intermediateQuantities$nodes))*
+                                 c(responseRange[2]-responseRange[1],
+                                   predictorsUpper - predictorsLower)+
+                                 c(responseRange[1], predictorsLower)))
+    colnames(dftrend) <- c(responseName, predictorNames)
+    trendValues <- trend(df=dftrend)
+    rm(dftrend)
+  }
 
   if(sigmaEstimationMethod=="heuristic"){
     Nsim <- 50
@@ -234,7 +248,8 @@ slgp <- function(formula,
       indMatrix =temp,
       weightQuadrature = weightQuadrature,
       Sigma = diag(sigma2, ncol(functionValues)),
-      mean_x = rep(0, ncol(functionValues))
+      mean_x = rep(0, ncol(functionValues)),
+      trendValues = trendValues
     )
   }else{
 
@@ -256,7 +271,8 @@ slgp <- function(formula,
         multiplicities=c(as.matrix(table(intermediateQuantities$indSamplesToPredictor))[, 1]),
         weightQuadrature = weightQuadrature,
         Sigma = diag(sigma2, ncol(functionValues)),
-        mean_x = rep(0, ncol(functionValues))
+        mean_x = rep(0, ncol(functionValues)),
+        trendValues = trendValues
       )
     }
     if(interpolateBasisFun =="NN"){
@@ -270,7 +286,8 @@ slgp <- function(formula,
         weightQuadrature = weightQuadrature,
         multiplicities=c(as.matrix(table(intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes]))[, 1]),
         Sigma = diag(sigma2, ncol(functionValues)),
-        mean_x = rep(0, ncol(functionValues))
+        mean_x = rep(0, ncol(functionValues)),
+        trendValues = trendValues
       )
     }
   }
@@ -365,6 +382,7 @@ slgp <- function(formula,
               data = data,
               responseName = responseName,
               covariateName = predictorNames,
+              trend=trend,
               method = method,
               predictorsRange = list(upper=predictorsUpper, lower = predictorsLower),
               responseRange = responseRange,
@@ -406,6 +424,7 @@ slgp <- function(formula,
 #' @param seed Optional integer to set the random seed for reproducibility.
 #' @param opts Optional list of additional options passed to inference routines:
 #'   \code{stan_chains}, \code{stan_iter}, \code{ndraws}, etc.
+#' @param trend Optional a function that returns the trend of the transformed GP (not to be estimated). If not provided, it defaults to 0.
 #' @param verbose Logical; if \code{TRUE}, print progress and diagnostic messages during computation.
 #'   Defaults to \code{FALSE}.
 #'
@@ -457,6 +476,7 @@ retrainSLGP <- function(SLGPmodel,
                         sigmaEstimationMethod = "none",
                         seed=NULL,
                         opts = list(),
+                        trend=NULL,
                         verbose = FALSE) {
   if(!is.null(seed)){
     set.seed(seed)
@@ -523,7 +543,21 @@ retrainSLGP <- function(SLGPmodel,
     })
     sigma2 <- median(5/resSim)
   }
-
+  if(is.null(trend)){
+    trend <- SLGPmodel@trend
+  }
+  if(is.null(trend)){
+    trend <- function(df){return(rep(0, nrow(df)))}
+    trendValues <- rep(0, nrow(functionValues))
+  }else{
+    dftrend <- as.data.frame(t(t(as.matrix(intermediateQuantities$nodes))*
+                                 c(responseRange[2]-responseRange[1],
+                                   predictorsUpper - predictorsLower)+
+                                 c(responseRange[1], predictorsLower)))
+    colnames(dftrend) <- c(responseName, predictorNames)
+    trendValues <- trend(df=dftrend)
+    rm(dftrend)
+  }
   if(is.null(opts$discrete)){
     weightQuadrature <- c(1/nIntegral/2, rep(1/(nIntegral-1), nIntegral-2), 1/nIntegral/2)
   }else{
@@ -553,7 +587,8 @@ retrainSLGP <- function(SLGPmodel,
       indMatrix =temp,
       weightQuadrature = weightQuadrature,
       Sigma = diag(sigma2, ncol(functionValues)),
-      mean_x = rep(0, ncol(functionValues))
+      mean_x = rep(0, ncol(functionValues)),
+      trendValues = trendValues
     )
   }else{
     stan_model <- stanmodels$likelihoodSimple
@@ -569,7 +604,8 @@ retrainSLGP <- function(SLGPmodel,
         weightQuadrature = weightQuadrature,
         multiplicities=c(as.matrix(table(intermediateQuantities$indSamplesToPredictor))[, 1]),
         Sigma = diag(sigma2, ncol(functionValues)),
-        mean_x = rep(0, ncol(functionValues))
+        mean_x = rep(0, ncol(functionValues)),
+        trendValues = trendValues[!is.na(intermediateQuantities$indNodesToIntegral)]
       )
     }
     if(interpolateBasisFun =="NN"){
@@ -583,7 +619,8 @@ retrainSLGP <- function(SLGPmodel,
         weightQuadrature = weightQuadrature,
         multiplicities=c(as.matrix(table(intermediateQuantities$indNodesToIntegral[intermediateQuantities$indSamplesToNodes]))[, 1]),
         Sigma = diag(sigma2, ncol(functionValues)),
-        mean_x = rep(0, ncol(functionValues))
+        mean_x = rep(0, ncol(functionValues)),
+        trendValues = trendValues[!is.na(intermediateQuantities$indNodesToIntegral)]
       )
     }
   }
@@ -674,12 +711,12 @@ retrainSLGP <- function(SLGPmodel,
   if(method=="none"){
     epsilon <- matrix(nrow=0, ncol=ncol(functionValues))
     logPost <- NaN
-
   }
   gc()
   SLGPmodel@coefficients <- epsilon
   SLGPmodel@hyperparams <- list(sigma2=sigma2, lengthscale=lengthscale)
   SLGPmodel@method <- method
   SLGPmodel@logPost <- logPost
+  SLGPmodel@trend <- trend
   return(SLGPmodel)
 }

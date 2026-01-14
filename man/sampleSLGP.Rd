@@ -9,7 +9,6 @@ sampleSLGP(
   newX,
   n,
   interpolateBasisFun = "WNN",
-  mode = "inversion",
   nIntegral = 101,
   nDiscret = 101,
   seed = NULL
@@ -24,9 +23,6 @@ sampleSLGP(
 
 \item{interpolateBasisFun}{Character string specifying interpolation scheme for basis evaluation.
 One of \code{"nothing"}, \code{"NN"}, or \code{"WNN"} (default).}
-
-\item{mode}{Character string specifying sampling strategy.
-One of \code{"rejection"}, or \code{"inversion"} (default).}
 
 \item{nIntegral}{Integer; number of quadrature points for density approximation.}
 
